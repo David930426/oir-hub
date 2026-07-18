@@ -1,18 +1,22 @@
-/**
- * Database entry point.
- *
- * - Table definitions live in ./schema (one file per domain).
- * - Hand-written queries go in ./query (import the tables from here).
- *
- * Usage:
- *   import { schema } from "@/db";            // all tables + relations
- *   import { user, documents } from "@/db";   // or individual tables
- *
- * When the backend is wired up, the drizzle client will be created here:
- *
- *   import { drizzle } from "drizzle-orm/node-postgres";
- *   export const db = drizzle(process.env.DATABASE_URL!, { schema });
- */
+import "dotenv/config";
+import { drizzle } from "drizzle-orm/node-postgres";
+import type { Logger as DrizzleLogger } from "drizzle-orm/logger";
+import * as schema from "./schema";
+import { logger } from "@/lib/logger";
 
-export * as schema from "./schema";
-export * from "./schema";
+const dbLogger = logger.child({ module: "db" });
+
+const queryLogger: DrizzleLogger = {
+  logQuery(query, params) {
+    dbLogger.debug({ query, params }, "query");
+  },
+};
+
+export const db = drizzle({
+  connection: process.env.DATABASE_URL!,
+  schema,
+  casing: "snake_case",
+  logger: queryLogger,
+});
+
+export type DbOrTx = typeof db | Parameters<Parameters<(typeof db)["transaction"]>[0]>[0];

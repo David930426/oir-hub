@@ -16,7 +16,7 @@ import { announcements } from "./content.schema";
  * database column names use snake_case.
  */
 
-export const userRole = pgEnum("user_role", ["ADMIN", "STAFF", "STUDENT"]);
+export const userRole = pgEnum("user_role", ["admin", "student"]);
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -25,7 +25,7 @@ export const user = pgTable("user", {
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
   // Admin plugin — configure `defaultRole: "STUDENT"` in the plugin options.
-  role: userRole("role").notNull().default("STUDENT"),
+  role: userRole("role").notNull().default("student"),
   banned: boolean("banned").notNull().default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires", { withTimezone: true }),

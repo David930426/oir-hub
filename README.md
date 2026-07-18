@@ -1,6 +1,6 @@
 # OIR Hub — Study Abroad Information Center
 
-A web platform for the **Office of International Relations (OIR), Tunghai University**, that helps Taiwan students who want to study abroad. It centralizes verified information (visas, scholarships, housing, exchange programs), publishes official announcements so students never miss a deadline, and answers questions 24/7 through a RAG chatbot grounded in the OIR knowledge base.
+A platform for Tunghai University's Office of International Relations. It centralizes study-abroad info (visas, scholarships, housing, exchange programs), publishes announcements, and answers questions via a RAG chatbot.
 
 ## Tech stack
 
@@ -16,82 +16,59 @@ A web platform for the **Office of International Relations (OIR), Tunghai Univer
 ## Getting started
 
 ```bash
-# 1. Install dependencies
 pnpm install
-
-# 2. Register the git hooks (required once after install)
-#    Enables the commit-msg hook that checks commit messages
-#    against Conventional Commits via commitlint.
-npx simple-git-hooks
-
-# 3. Configure environment
+npx simple-git-hooks       # enables commit-msg linting (Conventional Commits)
 cp .env.example .env       # then fill in the values
-
-# 4. Run the dev server
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
-> **Note:** the frontend currently runs on static mock data ([lib/mock-data.ts](lib/mock-data.ts)) — no database or backend is required to preview the UI yet.
+> The frontend currently runs on static mock data ([lib/mock-data.ts](lib/mock-data.ts)) — no database is required to preview the UI yet.
 
 ## Database
 
-Table definitions live in [`db/schema`](db/schema), split by domain:
+Schemas live in [`db/schema`](db/schema), one file per domain:
 
-- [`auth.schema.ts`](db/schema/auth.schema.ts) — `user`, `session`, `account`, `verification` (Better Auth core + admin plugin fields)
-- [`chat.schema.ts`](db/schema/chat.schema.ts) — `conversations`, `messages`, `feedback`, `survey_responses`
-- [`knowledge.schema.ts`](db/schema/knowledge.schema.ts) — `categories`, `documents`, `document_chunks`
-- [`content.schema.ts`](db/schema/content.schema.ts) — `announcements`, `contact_messages`
+| File | Tables |
+|---|---|
+| [`auth.schema.ts`](db/schema/auth.schema.ts) | `user`, `session`, `account`, `verification` |
+| [`chat.schema.ts`](db/schema/chat.schema.ts) | `conversations`, `messages`, `feedback`, `survey_responses` |
+| [`knowledge.schema.ts`](db/schema/knowledge.schema.ts) | `categories`, `documents`, `document_chunks` |
+| [`content.schema.ts`](db/schema/content.schema.ts) | `announcements`, `contact_messages` |
 
-[`db/index.ts`](db/index.ts) is the single entry point (`import { schema } from "@/db"`); hand-written queries go in `db/query`.
+[`db/index.ts`](db/index.ts) is the entry point (`import { schema } from "@/db"`); hand-written queries go in `db/query`.
 
 ```bash
-# Generate SQL migrations from the schema
-pnpm exec drizzle-kit generate
-
-# Apply migrations to the database in .env
-pnpm migrate
-
-# Inspect the database in a browser UI
-pnpm exec drizzle-kit studio
+pnpm exec drizzle-kit generate   # generate SQL migrations from the schema
+pnpm migrate                     # apply migrations to the database in .env
+pnpm exec drizzle-kit studio     # inspect the database in a browser UI
 ```
 
 ## Routes
 
-**Public (no login needed)**
+**Public**
 
 | Route | Description |
 |---|---|
-| `/` | Landing page — intro, category quick links, latest announcements |
-| `/knowledge` | Browse the knowledge base, filter by category and school |
-| `/knowledge/[id]` | Read one document with author, dates, and attachments |
-| `/announcements` | Published OIR news by category (scholarship / announcement / news) |
-| `/announcements/[id]` | Read one announcement with attachments |
-| `/chat` | RAG chatbot (full page; a floating widget is also available site-wide) |
-| `/contact` | Contact form + office hours and staff directory |
+| `/` | Landing page |
+| `/knowledge`, `/knowledge/[id]` | Browse / read knowledge base documents |
+| `/announcements`, `/announcements/[id]` | Browse / read OIR announcements |
+| `/chat` | RAG chatbot |
+| `/contact` | Contact form + office hours |
 
-**Auth (students optional, staff required)**
+**Auth** — `/login`, `/register`, `/profile`
 
-| Route | Description |
-|---|---|
-| `/login` | Log in |
-| `/register` | Student sign-up (staff accounts are created by an admin) |
-| `/profile` | Edit personal information and preferences |
-
-**Admin (STAFF/ADMIN only)**
+**Admin** (STAFF/ADMIN only)
 
 | Route | Description |
 |---|---|
-| `/admin` | Dashboard — chats/day, rating ratio, document status, unresolved contacts |
-| `/admin/documents` | Manage KB documents: upload, retry FAILED, delete |
-| `/admin/documents/[id]` | Inspect a document's chunks |
-| `/admin/documents/[id]/edit` | Edit chunks (debug bad chunking) |
-| `/admin/conversations` | Chat logs, filter by rating / language / time |
-| `/admin/conversations/[id]` | Full transcript + retrieved chunks per answer |
+| `/admin` | Dashboard — chats/day, ratings, document status |
+| `/admin/documents`, `/admin/documents/[id]`, `.../edit` | Manage & inspect KB documents and chunks |
+| `/admin/conversations`, `/admin/conversations/[id]` | Chat logs + retrieved chunks per answer |
 | `/admin/announcements` | Create / edit / publish / delete announcements |
-| `/admin/feedback` | Rating trends, model comparison, SUS results + CSV export |
-| `/admin/users` | Manage staff & student accounts (ADMIN role only) |
+| `/admin/feedback` | Rating trends, model comparison, SUS results, CSV export |
+| `/admin/users` | Manage accounts (ADMIN only) |
 
 ## Project structure
 
@@ -119,5 +96,5 @@ public/         OIR Tunghai logos and images
 | `pnpm build` | Production build |
 | `pnpm start` | Serve the production build |
 | `pnpm lint` | Run ESLint |
-| `pnpm migrate` | Apply Drizzle migrations to the database |
-| `pnpm release` | Version bump + changelog (commit-and-tag-version) |
+| `pnpm migrate` | Apply Drizzle migrations |
+| `pnpm release` | Version bump + changelog |
