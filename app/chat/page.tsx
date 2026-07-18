@@ -11,8 +11,24 @@ import {
   UserRound,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageFooter,
+  MessageHeader,
+} from "@/components/ui/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@/components/ui/message-scroller";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { suggestedQuestions } from "@/lib/mock-data";
@@ -26,14 +42,17 @@ const history = [
 
 const messages = [
   {
+    id: "m1",
     role: "assistant" as const,
     text: "Hi! I'm the OIR assistant. I answer from the official OIR knowledge base — ask me about visas, scholarships, housing, or exchange programs, in English or 中文.",
   },
   {
+    id: "m2",
     role: "user" as const,
     text: "When does the Spring 2027 exchange application close?",
   },
   {
+    id: "m3",
     role: "assistant" as const,
     text: "The Spring 2027 semester exchange application closes on August 15, 2026 at 17:00. Late submissions are not accepted under any circumstances.\n\nIf you'd like to learn more before applying, two info sessions will be held in the International Building Room 302 on July 22 and July 29 (Wednesdays, 12:10–13:00) — both cover the same content.",
     sources: [
@@ -86,61 +105,91 @@ export default function ChatPage() {
 
       {/* Conversation */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <ScrollArea className="min-h-0 flex-1">
-          <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
-            {messages.map((m, i) => (
-              <div key={i} className="flex gap-3">
-                <span
-                  className={cn(
-                    "flex size-8 shrink-0 items-center justify-center rounded-full",
-                    m.role === "assistant"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  {m.role === "assistant" ? (
-                    <Bot className="size-4" />
-                  ) : (
-                    <UserRound className="size-4" />
-                  )}
-                </span>
-                <div className="min-w-0 flex-1 space-y-2">
-                  <p className="text-sm font-semibold">
-                    {m.role === "assistant" ? "OIR Assistant" : "You"}
-                  </p>
-                  <div className="whitespace-pre-line text-[15px] leading-relaxed text-foreground/90">
-                    {m.text}
-                  </div>
+        <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+          <MessageScroller className="min-h-0 flex-1">
+            <MessageScrollerViewport>
+              <MessageScrollerContent className="mx-auto max-w-3xl px-4 py-8">
+                {messages.map((m) => (
+                  <MessageScrollerItem
+                    key={m.id}
+                    messageId={m.id}
+                    scrollAnchor={m.role === "user"}
+                  >
+                    <Message align={m.role === "user" ? "end" : "start"}>
+                      <MessageAvatar
+                        className={cn(
+                          "size-8",
+                          m.role === "assistant"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {m.role === "assistant" ? (
+                          <Bot className="size-4" />
+                        ) : (
+                          <UserRound className="size-4" />
+                        )}
+                      </MessageAvatar>
+                      <MessageContent>
+                        <MessageHeader>
+                          {m.role === "assistant" ? "OIR Assistant" : "You"}
+                        </MessageHeader>
+                        <Bubble
+                          variant={m.role === "assistant" ? "muted" : "default"}
+                          align={m.role === "user" ? "end" : "start"}
+                        >
+                          <BubbleContent className="whitespace-pre-line text-[15px] leading-relaxed">
+                            {m.text}
+                          </BubbleContent>
+                        </Bubble>
 
-                  {"sources" in m && m.sources && (
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <span className="text-xs text-muted-foreground">Sources:</span>
-                      {m.sources.map((s) => (
-                        <Badge key={s} variant="secondary" className="gap-1 font-normal">
-                          <FileText className="size-3" />
-                          <span className="max-w-56 truncate">{s}</span>
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+                        {"sources" in m && m.sources && (
+                          <div className="flex flex-wrap items-center gap-2 px-3">
+                            <span className="text-xs text-muted-foreground">
+                              Sources:
+                            </span>
+                            {m.sources.map((s) => (
+                              <Badge
+                                key={s}
+                                variant="secondary"
+                                className="gap-1 font-normal"
+                              >
+                                <FileText className="size-3" />
+                                <span className="max-w-56 truncate">{s}</span>
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
 
-                  {m.role === "assistant" && i > 0 && (
-                    <div className="flex items-center gap-1 pt-1">
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
-                        <ThumbsUp className="size-3.5" />
-                        <span className="sr-only">Good answer</span>
-                      </Button>
-                      <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
-                        <ThumbsDown className="size-3.5" />
-                        <span className="sr-only">Bad answer</span>
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
+                        {m.role === "assistant" && m.id !== "m1" && (
+                          <MessageFooter className="gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 text-muted-foreground"
+                            >
+                              <ThumbsUp className="size-3.5" />
+                              <span className="sr-only">Good answer</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 text-muted-foreground"
+                            >
+                              <ThumbsDown className="size-3.5" />
+                              <span className="sr-only">Bad answer</span>
+                            </Button>
+                          </MessageFooter>
+                        )}
+                      </MessageContent>
+                    </Message>
+                  </MessageScrollerItem>
+                ))}
+              </MessageScrollerContent>
+            </MessageScrollerViewport>
+            <MessageScrollerButton />
+          </MessageScroller>
+        </MessageScrollerProvider>
 
         {/* Composer */}
         <div className="border-t bg-background">

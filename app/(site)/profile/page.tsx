@@ -1,9 +1,4 @@
-"use client";
-
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { KeyRound, Save } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,123 +9,61 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { ProfileForm } from "./profile-form";
 
-const profileSchema = z.object({
-  name: z.string().min(2, "Please enter your full name."),
-  studentId: z.string(),
-  major: z.string().min(2, "Please enter your major or department."),
-  email: z.string().email("Please enter a valid email address."),
-});
-
-type ProfileForm = z.infer<typeof profileSchema>;
-
-export default function ProfilePage() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ProfileForm>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: "Liu Yu-Chen",
-      studentId: "s10712345",
-      major: "International Business",
-      email: "s10712345@thu.edu.tw",
-    },
-  });
-
-  // Static design only — saving is not wired yet.
-  const onSubmit = (data: ProfileForm) => {
-    console.log("profile (static demo):", data);
+// Static design only — replace with a real session/DB lookup once auth is wired.
+async function getProfile() {
+  return {
+    name: "Liu Yu-Chen",
+    studentId: "s10712345",
+    major: "International Business",
+    email: "s10712345@thu.edu.tw",
+    role: "Student",
+    memberSince: "February 2026",
+    lastLogin: "today 09:15",
   };
+}
+
+export default async function ProfilePage() {
+  const profile = await getProfile();
+  const initials = profile.name
+    .split(/\s|-/)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-8 flex items-center gap-4">
         <Avatar className="size-16">
           <AvatarFallback className="bg-primary text-lg font-semibold text-primary-foreground">
-            LY
+            {initials}
           </AvatarFallback>
         </Avatar>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">Liu Yu-Chen</h1>
-            <Badge variant="secondary">Student</Badge>
+            <h1 className="text-2xl font-bold tracking-tight">{profile.name}</h1>
+            <Badge variant="secondary">{profile.role}</Badge>
           </div>
           <p className="text-sm text-muted-foreground">
-            Member since February 2026 · Last login today 09:15
+            Member since {profile.memberSince} · Last login {profile.lastLogin}
           </p>
         </div>
       </div>
 
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Personal information</CardTitle>
-            <CardDescription>
-              This information is used when you submit questions through the
-              contact form.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} noValidate>
-              <FieldGroup className="gap-5">
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <Field data-invalid={!!errors.name}>
-                    <FieldLabel htmlFor="name">Full name</FieldLabel>
-                    <Input id="name" aria-invalid={!!errors.name} {...register("name")} />
-                    {errors.name && <FieldError>{errors.name.message}</FieldError>}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel htmlFor="studentId">Student ID</FieldLabel>
-                    <Input id="studentId" disabled {...register("studentId")} />
-                    <FieldDescription>
-                      Student ID cannot be changed.
-                    </FieldDescription>
-                  </Field>
-                </div>
-
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <Field data-invalid={!!errors.major}>
-                    <FieldLabel htmlFor="major">Major / Department</FieldLabel>
-                    <Input id="major" aria-invalid={!!errors.major} {...register("major")} />
-                    {errors.major && <FieldError>{errors.major.message}</FieldError>}
-                  </Field>
-
-                  <Field data-invalid={!!errors.email}>
-                    <FieldLabel htmlFor="email">Email</FieldLabel>
-                    <Input
-                      id="email"
-                      type="email"
-                      aria-invalid={!!errors.email}
-                      {...register("email")}
-                    />
-                    {errors.email && <FieldError>{errors.email.message}</FieldError>}
-                  </Field>
-                </div>
-
-                <div>
-                  <Button type="submit">
-                    <Save className="size-4" />
-                    Save changes
-                  </Button>
-                </div>
-              </FieldGroup>
-            </form>
-          </CardContent>
-        </Card>
+        <ProfileForm
+          profile={{
+            name: profile.name,
+            studentId: profile.studentId,
+            major: profile.major,
+            email: profile.email,
+          }}
+        />
 
         <Card>
           <CardHeader>

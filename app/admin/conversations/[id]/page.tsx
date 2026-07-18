@@ -1,8 +1,15 @@
 import Link from "next/link";
 import { ArrowLeft, Bot, FileText, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageHeader,
+} from "@/components/ui/message";
 import { RatingBadge } from "@/components/admin/badges";
 import { conversations, transcript } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
@@ -57,10 +64,10 @@ export default async function AdminConversationDetailPage({
 
       <div className="space-y-5">
         {transcript.map((turn, i) => (
-          <div key={i} className="flex gap-3">
-            <span
+          <Message key={i} align={turn.role === "user" ? "end" : "start"}>
+            <MessageAvatar
               className={cn(
-                "flex size-8 shrink-0 items-center justify-center rounded-full",
+                "size-8",
                 turn.role === "assistant"
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground"
@@ -71,53 +78,55 @@ export default async function AdminConversationDetailPage({
               ) : (
                 <UserRound className="size-4" />
               )}
-            </span>
-            <div className="min-w-0 flex-1">
-              <Card className={cn("py-4", turn.role === "user" && "bg-muted/40")}>
-                <CardContent className="space-y-3 px-4">
-                  <p className="text-sm leading-relaxed text-foreground/90">
-                    {turn.text}
-                  </p>
+            </MessageAvatar>
+            <MessageContent>
+              <MessageHeader>
+                {turn.role === "assistant" ? "Assistant" : "User"}
+              </MessageHeader>
+              <Bubble
+                variant={turn.role === "assistant" ? "outline" : "muted"}
+                align={turn.role === "user" ? "end" : "start"}
+              >
+                <BubbleContent>{turn.text}</BubbleContent>
+              </Bubble>
 
-                  {turn.retrievedChunks && (
-                    <div className="rounded-lg border bg-muted/30 p-3">
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Retrieved chunks
-                      </p>
-                      <ul className="space-y-1.5">
-                        {turn.retrievedChunks.map((rc, j) => (
-                          <li
-                            key={j}
-                            className="flex items-center justify-between gap-3 text-xs"
-                          >
-                            <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
-                              <FileText className="size-3.5 shrink-0" />
-                              <span className="truncate">
-                                {rc.docTitle} · chunk #{rc.chunkIndex}
-                              </span>
-                            </span>
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "shrink-0 font-mono tabular-nums",
-                                rc.score >= 0.8
-                                  ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                                  : rc.score >= 0.7
-                                    ? "bg-amber-100 text-amber-800 border-amber-200"
-                                    : "bg-red-100 text-red-800 border-red-200"
-                              )}
-                            >
-                              {rc.score.toFixed(2)}
-                            </Badge>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+              {turn.retrievedChunks && (
+                <div className="max-w-[80%] rounded-lg border bg-muted/30 p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Retrieved chunks
+                  </p>
+                  <ul className="space-y-1.5">
+                    {turn.retrievedChunks.map((rc, j) => (
+                      <li
+                        key={j}
+                        className="flex items-center justify-between gap-3 text-xs"
+                      >
+                        <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                          <FileText className="size-3.5 shrink-0" />
+                          <span className="truncate">
+                            {rc.docTitle} · chunk #{rc.chunkIndex}
+                          </span>
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "shrink-0 font-mono tabular-nums",
+                            rc.score >= 0.8
+                              ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                              : rc.score >= 0.7
+                                ? "bg-amber-100 text-amber-800 border-amber-200"
+                                : "bg-red-100 text-red-800 border-red-200"
+                          )}
+                        >
+                          {rc.score.toFixed(2)}
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </MessageContent>
+          </Message>
         ))}
       </div>
     </div>

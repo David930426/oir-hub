@@ -4,9 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bot, Maximize2, MessageCircle, Send, X } from "lucide-react";
+import {
+  Bubble,
+  BubbleContent,
+  BubbleGroup,
+} from "@/components/ui/bubble";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 
 const sampleMessages = [
   {
@@ -66,20 +70,19 @@ export function ChatWidget() {
             </div>
           </div>
 
-          <div className="flex-1 space-y-3 overflow-y-auto p-4">
-            {sampleMessages.map((m, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed",
-                  m.role === "assistant"
-                    ? "bg-muted text-foreground"
-                    : "ml-auto bg-primary text-primary-foreground"
-                )}
-              >
-                {m.text}
-              </div>
-            ))}
+          <div className="flex-1 overflow-y-auto p-4">
+            <BubbleGroup className="gap-3">
+              {sampleMessages.map((m, i) => (
+                <Bubble
+                  key={i}
+                  variant={m.role === "assistant" ? "muted" : "default"}
+                  align={m.role === "assistant" ? "start" : "end"}
+                  className="max-w-[85%]"
+                >
+                  <BubbleContent>{m.text}</BubbleContent>
+                </Bubble>
+              ))}
+            </BubbleGroup>
           </div>
 
           <div className="border-t p-3">

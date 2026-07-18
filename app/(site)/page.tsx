@@ -40,8 +40,8 @@ export default function HomePage() {
           priority
           className="object-cover object-center"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#132836]/95 via-[#1E3A4C]/85 to-[#1E3A4C]/40" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#132836]/60 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-[#132836]/95 via-[#1E3A4C]/85 to-[#1E3A4C]/40" />
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-[#132836]/60 to-transparent" />
         <div className="relative mx-auto max-w-6xl px-4 py-20 sm:py-28">
           <div className="max-w-2xl space-y-6">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur">
