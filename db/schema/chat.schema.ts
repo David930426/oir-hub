@@ -17,7 +17,7 @@ import { user } from "./auth.schema";
  * and SUS survey responses.
  */
 
-export const messageRole = pgEnum("message_role", ["USER", "ASSISTANT"]);
+export const messageRole = pgEnum("message_role", ["user", "assitant"]);
 
 /** One retrieved source attached to an assistant message. */
 export type MessageSource = {

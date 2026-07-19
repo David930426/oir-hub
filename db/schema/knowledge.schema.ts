@@ -16,10 +16,10 @@ import { user } from "./auth.schema";
  */
 
 export const documentStatus = pgEnum("document_status", [
-  "PENDING",
-  "PROCESSING",
-  "INDEXED",
-  "FAILED",
+  "pending",
+  "processing",
+  "indexed",
+  "failed",
 ]);
 
 export const documentSourceType = pgEnum("document_source_type", [
@@ -53,7 +53,7 @@ export const documents = pgTable(
     sourceUrl: text("source_url"), // when scraped from the web
     filePath: text("file_path"), // upload location on disk / object storage
     language: text("language").notNull().default("en"),
-    status: documentStatus("status").notNull().default("PENDING"),
+    status: documentStatus("status").notNull().default("pending"),
     errorMessage: text("error_message"), // set when status = FAILED
     chunkCount: integer("chunk_count").notNull().default(0),
     version: integer("version").notNull().default(1), // bumped on re-upload

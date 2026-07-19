@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "migrate": "drizzle-kit migrate",
+    "migrate": "drizzle-kit push",
     "release": "commit-and-tag-version"
   },
   "dependencies": {
