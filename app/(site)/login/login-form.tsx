@@ -61,8 +61,8 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle className="text-base">Log in</CardTitle>
         <CardDescription>
-          Students can browse without an account — logging in is optional.
-          Staff accounts are required to access the admin area.
+          For OIR staff only. Your role — admin, editor, or viewer — decides
+          which parts of the console you can open.
         </CardDescription>
       </CardHeader>
       <CardContent>

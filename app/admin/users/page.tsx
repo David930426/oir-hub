@@ -48,41 +48,43 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RoleBadge } from "@/components/admin/badges";
-import { adminUsers } from "@/lib/mock-data";
+import { PageHeader } from "@/components/admin/page-header";
+import { ActiveBadge, EnumBadge } from "@/components/shared/enum-badge";
+import { userRoleMeta, users } from "@/lib/mock";
+
+/** What each role may do — shown so admins pick deliberately. */
+const rolePermissions: Record<string, string> = {
+  admin: "Full access, including user management and deletion.",
+  editor: "Create and publish content; cannot manage users.",
+  viewer: "Read-only access to the console and its reports.",
+};
+
+const roleTabs = ["all", "admin", "editor", "viewer"] as const;
 
 export default function AdminUsersPage() {
-  const [tab, setTab] = useState("staff");
+  const [role, setRole] = useState<string>("all");
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(
     () =>
-      adminUsers.filter((u) => {
-        const isStaff = u.role === "ADMIN" || u.role === "STAFF";
-        if (tab === "staff" && !isStaff) return false;
-        if (tab === "students" && isStaff) return false;
+      users.filter((u) => {
+        if (role !== "all" && u.role !== role) return false;
         if (
           query &&
-          !`${u.name} ${u.email} ${u.studentId ?? ""}`
-            .toLowerCase()
-            .includes(query.toLowerCase())
+          !`${u.name} ${u.email}`.toLowerCase().includes(query.toLowerCase())
         )
           return false;
         return true;
       }),
-    [tab, query]
+    [role, query]
   );
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Users</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage staff and student accounts.
-          </p>
-        </div>
-
+      <PageHeader
+        title="Users"
+        description="Accounts exist for OIR staff only. Students use the site and the assistant anonymously — there is no public sign-up."
+      >
         <Dialog>
           <DialogTrigger asChild>
             <Button>
@@ -94,30 +96,70 @@ export default function AdminUsersPage() {
             <DialogHeader>
               <DialogTitle>Create staff account</DialogTitle>
               <DialogDescription>
-                Staff accounts can only be created here — there is no
-                self-signup for staff.
+                An invitation email is sent to the address below. The account
+                stays inactive until the invite is accepted.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="staff-name">Full name</Label>
-                <Input id="staff-name" placeholder="e.g. Wang Chih-Hao" />
+                <Input id="staff-name" placeholder="e.g. Wang Chih-Hao 王志豪" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="staff-email">School email</Label>
-                <Input id="staff-email" type="email" placeholder="name@thu.edu.tw" />
+                <Input
+                  id="staff-email"
+                  type="email"
+                  placeholder="name@thu.edu.tw"
+                />
               </div>
-              <div className="space-y-2">
-                <Label>Role</Label>
-                <Select defaultValue="STAFF">
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="STAFF">STAFF</SelectItem>
-                    <SelectItem value="ADMIN">ADMIN</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Role</Label>
+                  <Select defaultValue="editor">
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(userRoleMeta) as (keyof typeof userRoleMeta)[]).map(
+                        (r) => (
+                          <SelectItem key={r} value={r}>
+                            {userRoleMeta[r].label}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Console language</Label>
+                  <Select defaultValue="zh-TW">
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="zh-TW">繁體中文</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="rounded-lg border bg-muted/40 p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  What each role can do
+                </p>
+                <ul className="space-y-1.5 text-xs text-muted-foreground">
+                  {(Object.keys(userRoleMeta) as (keyof typeof userRoleMeta)[]).map(
+                    (r) => (
+                      <li key={r}>
+                        <span className="font-medium text-foreground">
+                          {userRoleMeta[r].label}
+                        </span>{" "}
+                        — {rolePermissions[r]}
+                      </li>
+                    )
+                  )}
+                </ul>
               </div>
             </div>
             <DialogFooter>
@@ -126,28 +168,30 @@ export default function AdminUsersPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      </PageHeader>
 
       <Alert>
         <ShieldAlert className="size-4" />
         <AlertDescription>
-          This page is visible to the ADMIN role only. STAFF members cannot
+          This page is visible to the admin role only. Editors and viewers cannot
           manage accounts.
         </AlertDescription>
       </Alert>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Tabs value={tab} onValueChange={setTab}>
+        <Tabs value={role} onValueChange={setRole}>
           <TabsList>
-            <TabsTrigger value="staff">Staff &amp; Admins</TabsTrigger>
-            <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="all">All</TabsTrigger>
+            {roleTabs.map((r) => (
+              <TabsTrigger key={r} value={r}>
+                {r === "all" ? "All" : userRoleMeta[r].label}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </Tabs>
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name, email, ID…"
+            placeholder="Search by name or email…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full pl-8 sm:w-64"
@@ -162,20 +206,21 @@ export default function AdminUsersPage() {
               <TableRow>
                 <TableHead className="pl-6">User</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>Student ID / Major</TableHead>
+                <TableHead>Locale</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead>Last login</TableHead>
                 <TableHead className="pr-6 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((u) => (
-                <TableRow key={u.id}>
+              {filtered.map((user) => (
+                <TableRow key={user.id}>
                   <TableCell className="pl-6">
                     <div className="flex items-center gap-3">
                       <Avatar className="size-8">
                         <AvatarFallback className="bg-accent text-xs font-semibold text-accent-foreground">
-                          {u.name
+                          {user.name
                             .split(" ")
                             .map((n) => n[0])
                             .slice(0, 2)
@@ -183,37 +228,30 @@ export default function AdminUsersPage() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{u.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">{u.email}</p>
+                        <p className="truncate text-sm font-medium">{user.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <RoleBadge role={u.role} />
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {u.studentId ? (
-                      <>
-                        <span className="font-mono text-xs">{u.studentId}</span>
-                        <span className="block text-xs">{u.major}</span>
-                      </>
-                    ) : (
-                      "—"
-                    )}
+                    <EnumBadge value={user.role} meta={userRoleMeta} />
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        u.status === "active"
-                          ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                          : "bg-slate-100 text-slate-600 border-slate-200"
-                      }
-                    >
-                      {u.status === "active" ? "Active" : "Deactivated"}
+                    <Badge variant="outline" className="font-mono text-[10px]">
+                      {user.locale}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{u.lastLogin}</TableCell>
+                  <TableCell>
+                    <ActiveBadge active={user.active} />
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {user.createdAt}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {user.lastLoginAt}
+                  </TableCell>
                   <TableCell className="pr-6 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -230,7 +268,7 @@ export default function AdminUsersPage() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem variant="destructive">
                           <UserX className="size-4" />
-                          {u.status === "active" ? "Deactivate" : "Reactivate"}
+                          {user.active ? "Deactivate" : "Reactivate"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

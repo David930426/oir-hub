@@ -2,17 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, Search } from "lucide-react";
+import { Search, ShieldAlert, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -22,86 +15,84 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RatingBadge } from "@/components/admin/badges";
-import { conversations } from "@/lib/mock-data";
+import { PageHeader } from "@/components/admin/page-header";
+import { RatingBadge } from "@/components/shared/enum-badge";
+import {
+  chatSessions,
+  messagesForSession,
+  sessionEscalated,
+  sessionRating,
+  surveyForSession,
+} from "@/lib/mock";
 
 export default function AdminConversationsPage() {
-  const [rating, setRating] = useState("all");
-  const [language, setLanguage] = useState("all");
-  const [period, setPeriod] = useState("7d");
+  const [tab, setTab] = useState<string>("all");
   const [query, setQuery] = useState("");
+
+  const rows = useMemo(
+    () =>
+      chatSessions
+        .map((session) => {
+          const messages = messagesForSession(session.id);
+          const lastUserMessage = [...messages]
+            .reverse()
+            .find((m) => m.role === "user");
+          return {
+            session,
+            messageCount: messages.length,
+            lastMessage: lastUserMessage?.content ?? "—",
+            model: messages.find((m) => m.model)?.model ?? "—",
+            rating: sessionRating(session.id),
+            escalated: sessionEscalated(session.id),
+            survey: surveyForSession(session.id),
+          };
+        })
+        .sort((a, b) => b.session.createdAt.localeCompare(a.session.createdAt)),
+    []
+  );
 
   const filtered = useMemo(
     () =>
-      conversations.filter((c) => {
-        if (rating !== "all" && c.rating !== rating) return false;
-        if (language !== "all" && c.language !== language) return false;
+      rows.filter((row) => {
+        if (tab === "rated-down" && row.rating !== "down") return false;
+        if (tab === "escalated" && !row.escalated) return false;
+        if (tab === "surveyed" && !row.survey) return false;
         if (
           query &&
-          !`${c.lastMessage} ${c.user} ${c.sessionId}`
+          !`${row.lastMessage} ${row.session.anonId}`
             .toLowerCase()
             .includes(query.toLowerCase())
         )
           return false;
         return true;
       }),
-    [rating, language, query]
+    [rows, tab, query]
   );
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Conversations</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          All chatbot sessions — review transcripts and retrieved chunks to
-          debug answer quality.
-        </p>
-      </div>
+      <PageHeader
+        title="Conversations"
+        description="Anonymous chat sessions. No student identity is attached — only a browser-generated anon ID, so a transcript cannot be traced back to an individual."
+      />
 
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <Tabs value={rating} onValueChange={setRating}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
-            <TabsTrigger value="all">All ratings</TabsTrigger>
-            <TabsTrigger value="good">Good</TabsTrigger>
-            <TabsTrigger value="bad">Bad</TabsTrigger>
-            <TabsTrigger value="none">Unrated</TabsTrigger>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="rated-down">Rated bad</TabsTrigger>
+            <TabsTrigger value="escalated">Escalated</TabsTrigger>
+            <TabsTrigger value="surveyed">With survey</TabsTrigger>
           </TabsList>
         </Tabs>
-
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className="w-full sm:w-36">
-              <SelectValue placeholder="Language" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All languages</SelectItem>
-              <SelectItem value="EN">English</SelectItem>
-              <SelectItem value="中文">中文</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-full sm:w-40">
-              <CalendarDays className="size-4 text-muted-foreground" />
-              <SelectValue placeholder="Period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="24h">Last 24 hours</SelectItem>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="all">All time</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search messages…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-8 sm:w-56"
-            />
-          </div>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search message or anon ID…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full pl-8 sm:w-64"
+          />
         </div>
       </div>
 
@@ -110,41 +101,74 @@ export default function AdminConversationsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-6">Last message</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Session</TableHead>
-                <TableHead>Lang</TableHead>
-                <TableHead className="text-right">Msgs</TableHead>
+                <TableHead className="pl-6">Last question</TableHead>
+                <TableHead>Anon ID</TableHead>
+                <TableHead>Locale</TableHead>
+                <TableHead className="text-right">Turns</TableHead>
                 <TableHead>Model</TableHead>
                 <TableHead>Rating</TableHead>
+                <TableHead>Flags</TableHead>
                 <TableHead className="pr-6 text-right">Started</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell className="max-w-64 pl-6">
+              {filtered.map((row) => (
+                <TableRow key={row.session.id}>
+                  <TableCell className="max-w-72 pl-6">
                     <Link
-                      href={`/admin/conversations/${c.id}`}
+                      href={`/admin/conversations/${row.session.id}`}
                       className="block truncate font-medium hover:text-primary"
                     >
-                      {c.lastMessage}
+                      {row.lastMessage}
                     </Link>
+                    <span className="block text-xs text-muted-foreground">
+                      {row.session.userAgent}
+                    </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{c.user}</TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
-                    {c.sessionId}
+                    {row.session.anonId.slice(0, 8)}…
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{c.language}</Badge>
+                    <Badge variant="outline" className="font-mono text-[10px]">
+                      {row.session.locale}
+                    </Badge>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">{c.messages}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{c.model}</TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                    {row.messageCount}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {row.model}
+                  </TableCell>
                   <TableCell>
-                    <RatingBadge rating={c.rating} />
+                    <RatingBadge rating={row.rating} />
                   </TableCell>
-                  <TableCell className="pr-6 text-right text-muted-foreground">
-                    {c.startedAt}
+                  <TableCell>
+                    <span className="flex gap-1.5">
+                      {row.escalated && (
+                        <Badge
+                          variant="outline"
+                          className="gap-1 border-amber-200 bg-amber-100 px-1.5 text-[10px] font-medium text-amber-800"
+                        >
+                          <ShieldAlert className="size-3" />
+                          Escalated
+                        </Badge>
+                      )}
+                      {row.survey && (
+                        <Badge
+                          variant="outline"
+                          className="gap-1 px-1.5 text-[10px] font-medium"
+                        >
+                          <Star className="size-3" />
+                          SUS {row.survey.susScore}
+                        </Badge>
+                      )}
+                      {!row.escalated && !row.survey && (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </span>
+                  </TableCell>
+                  <TableCell className="pr-6 text-right text-sm text-muted-foreground">
+                    {row.session.createdAt}
                   </TableCell>
                 </TableRow>
               ))}

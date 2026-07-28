@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Clock, Mail, MapPin, Phone, UserRound } from "lucide-react";
 import {
   Card,
@@ -11,20 +12,20 @@ import { ContactForm } from "./contact-form";
 
 const officeContacts = [
   {
-    name: "Ms. Chen Yi-Ling",
-    duty: "Exchange programs · U.S. & Europe partners",
+    name: "Chen Yi-Ling 陳怡玲",
+    duty: "Exchange & dual degree · Americas and Europe partners",
     email: "ylchen@thu.edu.tw",
     ext: "ext. 22311",
   },
   {
-    name: "Mr. Huang Wei-Ting",
-    duty: "Scholarships · Japan & Korea partners",
+    name: "Huang Wei-Ting 黃偉庭",
+    duty: "Funding & internships · Japan and Korea partners",
     email: "wthuang@thu.edu.tw",
     ext: "ext. 22312",
   },
   {
-    name: "Ms. Lin Hsiao-Mei",
-    duty: "Housing, insurance & pre-departure",
+    name: "Lin Hsiao-Mei 林曉玫",
+    duty: "Credit transfer, housing, insurance & pre-departure",
     email: "hmlin@thu.edu.tw",
     ext: "ext. 22313",
   },
@@ -36,8 +37,16 @@ export default function ContactPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Contact the OIR</h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          Can&apos;t find the answer in the knowledge base? Send us your question
-          and the staff in charge will reply to your email within 3 working days.
+          Not covered by the{" "}
+          <Link
+            href="/faqs"
+            className="font-medium text-primary underline-offset-2 hover:underline"
+          >
+            FAQ
+          </Link>{" "}
+          or the assistant? Send your question here and the staff member in
+          charge of that topic will reply within 3 working days. Questions the
+          assistant escalates arrive in the same inbox.
         </p>
       </div>
 

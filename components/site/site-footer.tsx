@@ -2,6 +2,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 
+const applyLinks = [
+  { href: "/programs", label: "Programs" },
+  { href: "/bulletins", label: "Bulletins" },
+  { href: "/schools", label: "Partner schools" },
+  { href: "/funding", label: "Funding" },
+];
+
+const resourceLinks = [
+  { href: "/faqs", label: "FAQ" },
+  { href: "/testimonials", label: "Testimonials" },
+  { href: "/news", label: "News & notices" },
+  { href: "/t-corner", label: "T-Corner" },
+  { href: "/chat", label: "AI Assistant" },
+];
+
 export function SiteFooter() {
   return (
     <footer className="border-t bg-muted/40">
@@ -15,29 +30,35 @@ export function SiteFooter() {
             className="h-9 w-auto"
           />
           <p className="text-sm leading-relaxed text-muted-foreground">
-            The Office of International Relations information hub — helping
-            Taiwan students study abroad with accurate information and timely
-            announcements.
+            The Office of International Relations information hub — programs,
+            bulletins, funding, and student reports, kept in one place so no
+            deadline is missed.
           </p>
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-semibold">Explore</h3>
+          <h3 className="mb-3 text-sm font-semibold">Apply</h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><Link href="/knowledge" className="hover:text-foreground">Knowledge Base</Link></li>
-            <li><Link href="/announcements" className="hover:text-foreground">Announcements</Link></li>
-            <li><Link href="/chat" className="hover:text-foreground">AI Assistant</Link></li>
-            <li><Link href="/contact" className="hover:text-foreground">Contact Us</Link></li>
+            {applyLinks.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="hover:text-foreground">
+                  {l.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-semibold">Popular Topics</h3>
+          <h3 className="mb-3 text-sm font-semibold">Resources</h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><Link href="/knowledge" className="hover:text-foreground">Visa &amp; Immigration</Link></li>
-            <li><Link href="/knowledge" className="hover:text-foreground">Scholarships</Link></li>
-            <li><Link href="/knowledge" className="hover:text-foreground">Exchange Programs</Link></li>
-            <li><Link href="/knowledge" className="hover:text-foreground">Housing &amp; Dormitory</Link></li>
+            {resourceLinks.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="hover:text-foreground">
+                  {l.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
@@ -60,9 +81,12 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t py-4">
-        <p className="mx-auto max-w-6xl px-4 text-xs text-muted-foreground">
-          © 2026 OIR Hub — Office of International Relations. All rights reserved.
-        </p>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 text-xs text-muted-foreground">
+          <p>© 2026 OIR Hub — Office of International Relations. All rights reserved.</p>
+          <Link href="/login" className="hover:text-foreground">
+            Staff login
+          </Link>
+        </div>
       </div>
     </footer>
   );

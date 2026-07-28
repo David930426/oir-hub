@@ -1,4 +1,7 @@
-import { Download, ThumbsDown, ThumbsUp } from "lucide-react";
+"use client";
+
+import Link from "next/link";
+import { Download, Gauge, ThumbsDown, ThumbsUp, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,73 +20,98 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const weeklyTrend = [
-  { week: "Jun 15", good: 78 },
-  { week: "Jun 22", good: 81 },
-  { week: "Jun 29", good: 79 },
-  { week: "Jul 6", good: 85 },
-  { week: "Jul 13", good: 87 },
-];
-
-const modelComparison = [
-  { model: "claude-sonnet-5", answers: 412, good: 91, avgLatency: "2.1s" },
-  { model: "gpt-4o-mini", answers: 388, good: 82, avgLatency: "1.6s" },
-];
-
-const susResults = [
-  { statement: "I think I would like to use this chatbot frequently.", score: 4.2 },
-  { statement: "I found the chatbot unnecessarily complex.", score: 1.8, inverted: true },
-  { statement: "I thought the chatbot was easy to use.", score: 4.5 },
-  { statement: "I would need support to be able to use this chatbot.", score: 1.5, inverted: true },
-  { statement: "I found the answers well integrated with the sources.", score: 4.1 },
-  { statement: "I thought there was too much inconsistency.", score: 2.0, inverted: true },
-];
+import { PageHeader } from "@/components/admin/page-header";
+import { EnumBadge } from "@/components/shared/enum-badge";
+import {
+  chatFeedback,
+  chatMessages,
+  feedbackReasonMeta,
+  goodRatingTrend,
+  modelComparison,
+  susItems,
+  surveyResponses,
+} from "@/lib/mock";
+import { toneClasses } from "@/lib/mock/labels";
+import { cn } from "@/lib/utils";
 
 export default function AdminFeedbackPage() {
+  const good = chatFeedback.filter((f) => f.rating === 1).length;
+  const bad = chatFeedback.filter((f) => f.rating === -1).length;
+  const goodRatio = chatFeedback.length
+    ? Math.round((good / chatFeedback.length) * 100)
+    : 0;
+
+  const avgSus = surveyResponses.length
+    ? surveyResponses.reduce((sum, s) => sum + s.susScore, 0) /
+      surveyResponses.length
+    : 0;
+  const avgLift = surveyResponses.length
+    ? surveyResponses.reduce(
+        (sum, s) => sum + (s.confidenceAfter - s.confidenceBefore),
+        0
+      ) / surveyResponses.length
+    : 0;
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Feedback &amp; Evaluation</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Rating trends, per-model comparison, and SUS survey results.
-          </p>
-        </div>
+      <PageHeader
+        title="Feedback & evaluation"
+        description="Thumbs ratings per answer, per-model comparison, and System Usability Scale results — the numbers that go into the evaluation chapter."
+      >
         <Button variant="outline">
           <Download className="size-4" />
           Export CSV
         </Button>
-      </div>
+      </PageHeader>
 
-      {/* Summary cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/* Summary */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
             <CardDescription className="flex items-center gap-1.5">
               <ThumbsUp className="size-4 text-emerald-600" />
-              Good ratings (30 days)
+              Good ratings
             </CardDescription>
-            <CardTitle className="text-3xl">684</CardTitle>
-            <p className="text-xs text-muted-foreground">87% of all rated answers</p>
+            <CardTitle className="text-3xl tabular-nums">{good}</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {goodRatio}% of {chatFeedback.length} rated answers
+            </p>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
             <CardDescription className="flex items-center gap-1.5">
               <ThumbsDown className="size-4 text-red-600" />
-              Bad ratings (30 days)
+              Bad ratings
             </CardDescription>
-            <CardTitle className="text-3xl">102</CardTitle>
-            <p className="text-xs text-muted-foreground">Most common topic: scholarships</p>
+            <CardTitle className="text-3xl tabular-nums">{bad}</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Most common reason: incomplete
+            </p>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
-            <CardDescription>SUS score</CardDescription>
-            <CardTitle className="text-3xl">78.5</CardTitle>
+            <CardDescription>Average SUS score</CardDescription>
+            <CardTitle className="text-3xl tabular-nums">
+              {avgSus.toFixed(1)}
+            </CardTitle>
             <p className="text-xs text-muted-foreground">
-              41 responses · above the 68 industry average
+              {surveyResponses.length} responses · 68 is the industry average
+            </p>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardDescription className="flex items-center gap-1.5">
+              <TrendingUp className="size-4" />
+              Confidence lift
+            </CardDescription>
+            <CardTitle className="text-3xl tabular-nums">
+              +{avgLift.toFixed(1)}
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              mean before → after, on a 1–5 scale
             </p>
           </CardHeader>
         </Card>
@@ -97,13 +125,15 @@ export default function AdminFeedbackPage() {
             <CardDescription>Weekly good ratio, last 5 weeks</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {weeklyTrend.map((w) => (
-              <div key={w.week} className="space-y-1.5">
+            {goodRatingTrend.map((week) => (
+              <div key={week.week} className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Week of {w.week}</span>
-                  <span className="font-medium tabular-nums">{w.good}%</span>
+                  <span className="text-muted-foreground">
+                    Week of {week.week}
+                  </span>
+                  <span className="font-medium tabular-nums">{week.good}%</span>
                 </div>
-                <Progress value={w.good} />
+                <Progress value={week.good} />
               </div>
             ))}
           </CardContent>
@@ -112,8 +142,13 @@ export default function AdminFeedbackPage() {
         {/* Model comparison */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Per-model comparison</CardTitle>
-            <CardDescription>A/B comparison over the last 30 days</CardDescription>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Gauge className="size-4 text-primary" />
+              Per-model comparison
+            </CardTitle>
+            <CardDescription>
+              A/B over the last 30 days. Latency splits retrieval from generation.
+            </CardDescription>
           </CardHeader>
           <CardContent className="px-0">
             <Table>
@@ -126,24 +161,27 @@ export default function AdminFeedbackPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {modelComparison.map((m) => (
-                  <TableRow key={m.model}>
-                    <TableCell className="pl-6 font-mono text-xs">{m.model}</TableCell>
-                    <TableCell className="text-right tabular-nums">{m.answers}</TableCell>
+                {modelComparison.map((model) => (
+                  <TableRow key={model.model}>
+                    <TableCell className="pl-6 font-mono text-xs">
+                      {model.model}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {model.answers}
+                    </TableCell>
                     <TableCell className="text-right">
                       <Badge
                         variant="outline"
-                        className={
-                          m.good >= 88
-                            ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                            : "bg-amber-100 text-amber-800 border-amber-200"
-                        }
+                        className={cn(
+                          "font-medium tabular-nums",
+                          model.good >= 88 ? toneClasses.success : toneClasses.warning
+                        )}
                       >
-                        {m.good}%
+                        {model.good}%
                       </Badge>
                     </TableCell>
-                    <TableCell className="pr-6 text-right tabular-nums text-muted-foreground">
-                      {m.avgLatency}
+                    <TableCell className="pr-6 text-right text-xs tabular-nums text-muted-foreground">
+                      {model.avgRetrievalMs}ms + {model.avgGenerationMs}ms
                     </TableCell>
                   </TableRow>
                 ))}
@@ -153,31 +191,116 @@ export default function AdminFeedbackPage() {
         </Card>
       </div>
 
-      {/* SUS */}
+      {/* SUS items */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">SUS survey results</CardTitle>
           <CardDescription>
             System Usability Scale, 1 (strongly disagree) – 5 (strongly agree).
-            Items marked ↓ are negative statements where lower is better.
+            Items marked ↓ are negative statements where a lower score is better;
+            bars are normalised so longer always means better.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {susResults.map((s) => (
-            <div key={s.statement} className="space-y-1.5">
+          {susItems.map((item) => (
+            <div key={item.item} className="space-y-1.5">
               <div className="flex items-center justify-between gap-4 text-sm">
                 <span className="text-muted-foreground">
-                  {s.statement} {s.inverted && <span title="Lower is better">↓</span>}
+                  <span className="mr-1.5 font-mono text-xs">{item.item}</span>
+                  {item.statement}{" "}
+                  {item.inverted && <span title="Lower is better">↓</span>}
                 </span>
-                <span className="shrink-0 font-medium tabular-nums">{s.score.toFixed(1)}</span>
+                <span className="shrink-0 font-medium tabular-nums">
+                  {item.score.toFixed(1)}
+                </span>
               </div>
               <Progress
                 value={
-                  s.inverted ? ((5 - s.score) / 4) * 100 : ((s.score - 1) / 4) * 100
+                  item.inverted
+                    ? ((5 - item.score) / 4) * 100
+                    : ((item.score - 1) / 4) * 100
                 }
               />
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      {/* Raw negative feedback — the actionable part */}
+      <Card className="py-0">
+        <CardHeader className="pt-6">
+          <CardTitle className="text-base">Recent comments</CardTitle>
+          <CardDescription>
+            Every rating that came with a written comment, newest first.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="px-0 pb-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-6">Rating</TableHead>
+                <TableHead>Reason</TableHead>
+                <TableHead>Comment</TableHead>
+                <TableHead>Answer</TableHead>
+                <TableHead className="pr-6 text-right">When</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {chatFeedback
+                .filter((f) => f.comment)
+                .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+                .map((feedback) => {
+                  const message = chatMessages.find(
+                    (m) => m.id === feedback.messageId
+                  );
+                  return (
+                    <TableRow key={feedback.id}>
+                      <TableCell className="pl-6">
+                        {feedback.rating === 1 ? (
+                          <span className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+                            <ThumbsUp className="size-3.5" />
+                            Good
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-sm font-medium text-red-700">
+                            <ThumbsDown className="size-3.5" />
+                            Bad
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {feedback.reason ? (
+                          <EnumBadge
+                            value={feedback.reason}
+                            meta={feedbackReasonMeta}
+                          />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="max-w-80 text-sm italic text-muted-foreground">
+                        “{feedback.comment}”
+                      </TableCell>
+                      <TableCell className="max-w-56">
+                        {message ? (
+                          <Link
+                            href={`/admin/conversations/${message.sessionId}`}
+                            className="block truncate text-sm hover:text-primary"
+                          >
+                            {message.content.slice(0, 60)}…
+                          </Link>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+                      <TableCell className="pr-6 text-right text-sm text-muted-foreground">
+                        {feedback.createdAt}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

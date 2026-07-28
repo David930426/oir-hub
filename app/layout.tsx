@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { LocaleProvider } from "@/components/site/locale-provider";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | OIR Hub",
   },
   description:
-    "The Office of International Relations information hub for Taiwan students planning to study abroad — knowledge base, announcements, and an AI assistant.",
+    "The Office of International Relations information hub for Tunghai students planning to study abroad — programs, bulletins, funding, FAQs, and an AI assistant.",
   icons: {
     icon: "/logo.png",
   },
@@ -36,7 +37,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        <LocaleProvider>{children}</LocaleProvider>
         <Toaster position="top-right" richColors/>
       </body>
     </html>

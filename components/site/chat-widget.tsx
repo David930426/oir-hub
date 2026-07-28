@@ -15,15 +15,15 @@ import { Input } from "@/components/ui/input";
 const sampleMessages = [
   {
     role: "assistant" as const,
-    text: "Hi! I'm the OIR assistant. Ask me anything about studying abroad — visas, scholarships, exchange programs, and more.",
+    text: "Hi! I answer from the official OIR sources — bulletins, FAQs, funding rules, and student reports. Ask in English or 中文.",
   },
   {
     role: "user" as const,
-    text: "When does the Spring 2027 exchange application close?",
+    text: "When does the 115-2 exchange application close?",
   },
   {
     role: "assistant" as const,
-    text: "The Spring 2027 exchange application closes on August 15, 2026 at 17:00. Two info sessions are held on July 22 and July 29.",
+    text: "It closes on 15 August 2026 at 17:00. The Japan & Korea round closes a week earlier, on 8 August.",
   },
 ];
 
@@ -39,7 +39,7 @@ export function ChatWidget() {
   return (
     <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
       {open && (
-        <div className="flex h-[28rem] w-80 flex-col overflow-hidden rounded-xl border bg-background shadow-xl sm:w-96">
+        <div className="flex h-112 w-80 flex-col overflow-hidden rounded-xl border bg-background shadow-xl sm:w-96">
           <div className="flex items-center justify-between gap-2 border-b bg-primary px-4 py-3 text-primary-foreground">
             <div className="flex items-center gap-2">
               <Bot className="size-5" />
