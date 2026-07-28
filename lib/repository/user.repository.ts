@@ -7,9 +7,3 @@ export async function findUserByEmail(email: string) {
     where: eq(user.email, email),
   });
 }
-
-export async function findUserByStudentId(studentId: string) {
-  return db.query.user.findFirst({
-    where: eq(user.studentId, studentId),
-  });
-}
