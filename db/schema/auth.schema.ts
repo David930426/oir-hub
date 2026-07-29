@@ -1,22 +1,27 @@
 import { relations } from "drizzle-orm";
 import { boolean, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { conversations } from "./chat.schema";
-import { documents } from "./knowledge.schema";
-import { announcements } from "./content.schema";
+import { mediaFiles, posts } from "./cms.schema";
+import { faqs } from "./knowledge.schema";
+import { siteStats, tcornerSlots } from "./mobility.schema";
 
 /**
- * Auth domain — follows the Better Auth core schema (user, session, account,
- * verification) plus the admin plugin fields (role, banned/banReason/banExpires
- * on user, impersonatedBy on session).
+ * Auth domain — the ERD's USERS entity, expressed through the Better Auth core
+ * schema (user, session, account, verification).
  *
- * Credential passwords live in account.password (providerId = "credential"),
- * which replaces the ERD's users.passwordHash.
+ * Mapping notes:
+ *  - USERS.passwordHash lives in account.password (providerId = "credential"),
+ *    which is where Better Auth expects credentials.
+ *  - USERS.active is a plain boolean, as drawn. The admin plugin's
+ *    banned/banReason/banExpires and session.impersonatedBy are deliberately
+ *    absent: the plugin is not installed, and dal.ts does the role gating.
+ *  - user.image and *.updatedAt are required by Better Auth's core model even
+ *    though the ERD omits them.
  *
  * TS property names match Better Auth's expected field names exactly;
  * database column names use snake_case.
  */
 
-export const userRole = pgEnum("user_role", ["admin", "student"]);
+export const userRole = pgEnum("user_role", ["admin", "editor", "viewer"]);
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -24,16 +29,13 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
-  // Admin plugin — configure `defaultRole: "STUDENT"` in the plugin options.
-  role: userRole("role").notNull().default("student"),
-  banned: boolean("banned").notNull().default(false),
-  banReason: text("ban_reason"),
-  banExpires: timestamp("ban_expires", { withTimezone: true }),
-  // Additional fields (ERD + registration form)
-  language: text("language").notNull().default("en"), // "en" | "zh-TW"
-  nationality: text("nationality"),
-  studentId: text("student_id"),
-  major: text("major"),
+  // Staff-only roles. There is no student account: the public site and the
+  // assistant are anonymous, so nothing outside this office needs a login.
+  role: userRole("role").notNull().default("viewer"),
+  // Console language — "zh-TW" or "en", matching Locale in lib/i18n.ts.
+  locale: text("locale").notNull().default("zh-TW"),
+  // Deactivated accounts keep their history but cannot sign in (see dal.ts).
+  active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -52,8 +54,6 @@ export const session = pgTable("session", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
-  // Admin plugin — the ID of the admin impersonating this session.
-  impersonatedBy: text("impersonated_by"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -80,6 +80,7 @@ export const account = pgTable("account", {
   }),
   scope: text("scope"),
   idToken: text("id_token"),
+  // The ERD's USERS.passwordHash.
   password: text("password"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
@@ -107,9 +108,13 @@ export const verification = pgTable("verification", {
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
-  conversations: many(conversations),
-  uploadedDocuments: many(documents),
-  announcements: many(announcements),
+  // Content this staff member owns. Chat sessions are deliberately absent:
+  // the assistant is anonymous and its rows carry no user id.
+  posts: many(posts),
+  uploadedFiles: many(mediaFiles),
+  reviewedFaqs: many(faqs),
+  tcornerSlots: many(tcornerSlots),
+  siteStats: many(siteStats),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
