@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, ChevronDown, Globe, Menu } from "lucide-react";
+import { Check, ChevronDown, Globe, LayoutDashboard, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -79,7 +79,12 @@ const flatLinks = navGroups.flatMap((g) =>
   g.href ? [{ href: g.href, label: g.label }] : (g.items ?? [])
 );
 
-export function SiteHeader() {
+export function SiteHeader({
+  /** The signed-in staff member, resolved by the layout. Null for visitors. */
+  staff,
+}: {
+  staff: { name: string } | null;
+}) {
   const pathname = usePathname();
   const { locale, setLocale } = useLocale();
   const activeLocale = locales.find((l) => l.value === locale) ?? locales[0];
@@ -190,10 +195,25 @@ export function SiteHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* There is no public sign-up: accounts exist only for OIR staff. */}
-          <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
-            <Link href="/login">Staff login</Link>
-          </Button>
+          {/* There is no public sign-up: accounts exist only for OIR staff, so
+              this is either a way in or a shortcut back to the console. */}
+          {staff ? (
+            <Button asChild size="sm" className="hidden md:inline-flex">
+              <Link href="/admin" title={`Signed in as ${staff.name}`}>
+                <LayoutDashboard className="size-4" />
+                Dashboard
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="hidden md:inline-flex"
+            >
+              <Link href="/login">Staff login</Link>
+            </Button>
+          )}
 
           <Sheet>
             <SheetTrigger asChild>
@@ -221,9 +241,18 @@ export function SiteHeader() {
                     {link.label}
                   </Link>
                 ))}
-                <Button asChild variant="outline" className="mt-4">
-                  <Link href="/login">Staff login</Link>
-                </Button>
+                {staff ? (
+                  <Button asChild className="mt-4">
+                    <Link href="/admin">
+                      <LayoutDashboard className="size-4" />
+                      Dashboard
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button asChild variant="outline" className="mt-4">
+                    <Link href="/login">Staff login</Link>
+                  </Button>
+                )}
               </nav>
             </SheetContent>
           </Sheet>

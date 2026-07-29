@@ -17,7 +17,12 @@ const resourceLinks = [
   { href: "/chat", label: "AI Assistant" },
 ];
 
-export function SiteFooter() {
+export function SiteFooter({
+  /** The signed-in staff member, resolved by the layout. Null for visitors. */
+  staff,
+}: {
+  staff?: { name: string } | null;
+}) {
   return (
     <footer className="border-t bg-muted/40">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
@@ -83,8 +88,11 @@ export function SiteFooter() {
       <div className="border-t py-4">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 text-xs text-muted-foreground">
           <p>© 2026 OIR Hub — Office of International Relations. All rights reserved.</p>
-          <Link href="/login" className="hover:text-foreground">
-            Staff login
+          <Link
+            href={staff ? "/admin" : "/login"}
+            className="hover:text-foreground"
+          >
+            {staff ? "Dashboard" : "Staff login"}
           </Link>
         </div>
       </div>

@@ -52,7 +52,7 @@ export function LoginForm() {
     toast.success("Logged in", {
       description: `Signed in as ${data.email}`,
     });
-    router.push("/");
+    router.push("/admin");
     router.refresh();
   };
 

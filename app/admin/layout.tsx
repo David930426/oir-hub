@@ -11,7 +11,9 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-muted/30">
-      <AdminSidebar user={{ name: session.user.name, role }} />
+      <AdminSidebar
+        user={{ name: session.user.name, email: session.user.email, role }}
+      />
       <main className="min-w-0 flex-1 px-6 py-8 lg:px-10">{children}</main>
     </div>
   );

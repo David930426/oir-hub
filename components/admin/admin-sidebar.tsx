@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,12 +9,15 @@ import {
   BarChart3,
   BookOpenCheck,
   CalendarClock,
+  ChevronsUpDown,
   CircleHelp,
   Coins,
   FileStack,
   Images,
   Inbox,
   LayoutDashboard,
+  Loader2,
+  LogOut,
   MessagesSquare,
   Newspaper,
   Quote,
@@ -25,9 +29,19 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { logoutAction } from "@/lib/actions/logout.action";
 import { userRoleMeta } from "@/lib/mock";
+import { toneClasses } from "@/lib/mock/labels";
 import { cn } from "@/lib/utils";
 
 /** Sidebar sections mirror the ERD domains so staff learn the model as they work. */
@@ -94,12 +108,16 @@ export function AdminSidebar({
   user,
 }: {
   /** The signed-in staff member, resolved by the layout through the DAL. */
-  user: { name: string; role: string };
+  user: { name: string; email: string; role: string };
 }) {
   const pathname = usePathname();
+  const [isLoggingOut, startLogout] = useTransition();
 
-  const roleLabel =
-    userRoleMeta[user.role as keyof typeof userRoleMeta]?.label ?? user.role;
+  // Roles read as coloured badges everywhere else in the console, so the
+  // sidebar uses the same label and tone rather than plain grey text.
+  const roleMeta = userRoleMeta[user.role as keyof typeof userRoleMeta];
+  const roleLabel = roleMeta?.label ?? user.role;
+  const roleTone = toneClasses[roleMeta?.tone ?? "neutral"];
   const initials = user.name
     .split(" ")
     .map((part) => part[0])
@@ -179,24 +197,65 @@ export function AdminSidebar({
         <Separator className="mb-3" />
         <Link
           href="/"
-          className="mb-3 flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className="mb-2 flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
           <ArrowLeft className="size-4" />
           Back to site
         </Link>
-        <div className="flex items-center gap-2.5 rounded-md border bg-background px-3 py-2.5">
-          <Avatar className="size-8">
-            <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 leading-tight">
-            <p className="truncate text-sm font-medium">{user.name}</p>
-            <p className="truncate text-[11px] text-muted-foreground">
-              {roleLabel}
-            </p>
-          </div>
-        </div>
+
+        {/* Account menu — identity at a glance, sign-out one click away. */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="flex w-full items-center gap-2.5 rounded-lg border bg-background p-2 text-left transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none data-[state=open]:bg-accent"
+              disabled={isLoggingOut}
+            >
+              <Avatar className="size-8 shrink-0">
+                <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <span className="min-w-0 flex-1 leading-tight">
+                <span className="block truncate text-sm font-medium">
+                  {user.name}
+                </span>
+                <span
+                  className={cn(
+                    "mt-0.5 inline-block rounded px-1.5 py-px text-[10px] font-medium",
+                    roleTone
+                  )}
+                >
+                  {roleLabel}
+                </span>
+              </span>
+              {isLoggingOut ? (
+                <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
+              ) : (
+                <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
+              )}
+            </button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent side="top" align="start" className="w-54">
+            <DropdownMenuLabel className="font-normal">
+              <span className="block text-xs text-muted-foreground">
+                Signed in as
+              </span>
+              <span className="block truncate text-sm font-medium">
+                {user.email}
+              </span>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={isLoggingOut}
+              onSelect={() => startLogout(() => logoutAction())}
+            >
+              <LogOut className="size-4" />
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   );

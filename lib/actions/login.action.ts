@@ -30,8 +30,6 @@ export async function loginAction(
     await auth.api.signInEmail({
       body: { email, password, rememberMe },
     });
-
-    return { success: true };
   } catch (error) {
     if (error instanceof APIError) {
       return {
@@ -46,4 +44,6 @@ export async function loginAction(
       message: "Something went wrong. Please try again later.",
     };
   }
+
+  return { success: true };
 }
