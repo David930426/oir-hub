@@ -79,12 +79,14 @@ export default function FaqsPage() {
         </p>
       </div>
 
-      <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <Tabs value={categoryId} onValueChange={setCategoryId} className="overflow-x-auto">
-          <TabsList className="h-auto flex-wrap">
-            <TabsTrigger value="all">All</TabsTrigger>
+      <div className="mb-6 space-y-3">
+        <Tabs value={categoryId} onValueChange={setCategoryId}>
+          <TabsList className="h-auto! flex-wrap gap-1">
+            <TabsTrigger value="all" className="flex-none py-1">
+              All
+            </TabsTrigger>
             {faqCategories.map((c) => (
-              <TabsTrigger key={c.id} value={c.id}>
+              <TabsTrigger key={c.id} value={c.id} className="flex-none py-1">
                 {t(c.name)}
               </TabsTrigger>
             ))}
@@ -92,17 +94,17 @@ export default function FaqsPage() {
         </Tabs>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="relative">
+          <div className="relative sm:flex-1">
             <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search questions…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-8 sm:w-56"
+              className="w-full pl-8"
             />
           </div>
           <Select value={audience} onValueChange={setAudience}>
-            <SelectTrigger className="w-full sm:w-44">
+            <SelectTrigger className="w-full sm:w-44 sm:shrink-0">
               <Users className="size-4 text-muted-foreground" />
               <SelectValue />
             </SelectTrigger>
@@ -225,7 +227,7 @@ export default function FaqsPage() {
         </CardContent>
       </Card>
 
-      <Card className="mt-6 border-primary/20 bg-primary/[0.03]">
+      <Card className="mt-6 border-primary/20 bg-primary/3">
         <CardContent className="flex flex-wrap items-center justify-between gap-4 py-2">
           <p className="text-sm text-muted-foreground">
             Not answered here? The assistant searches the same sources, plus

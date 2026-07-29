@@ -107,7 +107,7 @@ export default function AdminFaqsPage() {
         </Button>
       </PageHeader>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="space-y-3">
         <Tabs value={publishState} onValueChange={setPublishState}>
           <TabsList>
             {publishTabs.map((p) => (
@@ -118,7 +118,7 @@ export default function AdminFaqsPage() {
           </TabsList>
         </Tabs>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
