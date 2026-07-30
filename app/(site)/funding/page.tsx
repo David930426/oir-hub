@@ -2,7 +2,15 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, Coins, Search } from "lucide-react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  Coins,
+  GraduationCap,
+  Info,
+  Landmark,
+  Search,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -22,6 +30,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EnumBadge } from "@/components/shared/enum-badge";
 import { useLocale } from "@/components/site/locale-provider";
+import type { Localized } from "@/lib/i18n";
 import {
   formatApplyMonths,
   formatTwd,
@@ -33,6 +42,137 @@ import {
 } from "@/lib/mock";
 
 const statusTabs = ["all", "open", "closed", "archived"] as const;
+
+const scholarshipsHeading: Localized = {
+  zh: "東海獎學金",
+  en: "Tunghai Scholarships",
+};
+
+const scholarshipsIntro: Localized = {
+  zh: "依學年度發放之國際學生獎學金,審核依據包含學業表現、系所評量及語言能力。",
+  en: "International Student Scholarships awarded per academic year, based on academic performance, departmental evaluation, and language proficiency.",
+};
+
+const scholarshipNotes: Localized[] = [
+  {
+    zh: "本獎學金用於抵免學費,並分兩學期發放,不含實習費、住宿費、網路使用費、學生保險費等雜費。",
+    en: "This scholarship offsets tuition and is split across two semesters — it does not cover fees such as labs, dorms, internet, or insurance.",
+  },
+  {
+    zh: "本獎學金須依在校學業表現逐年重新申請;如本清單與招生簡章內容不符,以招生簡章為準。",
+    en: "Renewal is required every year based on academic performance. The official Admission Notice takes precedence over this list.",
+  },
+  {
+    zh: "獲獎學生如申請保留入學資格(延後入學),將喪失獎學金資格。",
+    en: "Recipients who defer enrollment to a later semester or academic year will not retain scholarship eligibility.",
+  },
+  {
+    zh: "由國內其他大學轉學至東海大學之學生,於轉學入學階段不得申請本獎學金,惟可於入學後第二年依第一年學業表現申請。",
+    en: "Students transferring from other Taiwan universities are not eligible during the transfer admission process, but may apply in their second year based on first-year academic performance.",
+  },
+];
+
+const scholarshipTiers: {
+  id: string;
+  name: Localized;
+  amountLabel: string;
+  description: Localized;
+}[] = [
+  {
+    id: "type-1",
+    name: { zh: "第一類", en: "Type I" },
+    amountLabel: "NTD 100,000",
+    description: {
+      zh: "授予學業成績優異、排名頂尖之申請者。",
+      en: "Awarded to top-ranked applicants with strong academic records.",
+    },
+  },
+  {
+    id: "type-2",
+    name: { zh: "第二類", en: "Type II" },
+    amountLabel: "NTD 60,000",
+    description: {
+      zh: "授予表現優異之申請者。",
+      en: "Awarded to high-performing applicants.",
+    },
+  },
+  {
+    id: "type-3",
+    name: { zh: "第三類", en: "Type III" },
+    amountLabel: "NTD 20,000",
+    description: {
+      zh: "授予符合基本資格之申請者。",
+      en: "Awarded to qualifying applicants who meet baseline criteria.",
+    },
+  },
+];
+
+const qualificationsHeading: Localized = {
+  zh: "新生申請資格",
+  en: "New Student Application Qualifications",
+};
+
+const qualifications: Localized[] = [
+  { zh: "最高學歷成績單", en: "Transcript of the highest academic degree obtained" },
+  { zh: "系所評量", en: "Evaluation by the department or program" },
+  {
+    zh: "語言能力排名(以中文及英文為主)",
+    en: "Language proficiency ranking (primarily in Chinese and English)",
+  },
+];
+
+const overseasChineseHeading: Localized = {
+  zh: "僑生獎學金",
+  en: "Scholarships for Overseas Chinese Students",
+};
+
+const overseasChineseThuHeading: Localized = {
+  zh: "東海大學提供",
+  en: "Provided by Tunghai University",
+};
+
+const overseasChineseThu: { name: Localized; detail: Localized }[] = [
+  {
+    name: {
+      zh: "僑生助學金",
+      en: "Financial Aid Scholarship for Overseas Chinese Students",
+    },
+    detail: {
+      zh: "新生可於入學第一學期申請;第二學期起依前一學期學業表現核發。每學期新台幣5,000元。",
+      en: "New students may apply in their first semester; from the second semester onward the award is based on the previous semester's performance. NTD 5,000 per semester.",
+    },
+  },
+  {
+    name: {
+      zh: "僑生優秀研究生獎學金",
+      en: "Outstanding Overseas Chinese Graduate Scholarship",
+    },
+    detail: {
+      zh: "新入學研究生依大學學業表現核發;續發則依前一學期學業表現。每月新台幣10,000元。",
+      en: "For new graduate students, awarded based on undergraduate academic performance; renewal is based on the previous semester's performance. NTD 10,000 per month.",
+    },
+  },
+];
+
+const overseasChineseExternalHeading: Localized = {
+  zh: "政府及校外機構提供",
+  en: "Provided by Government and External Organizations",
+};
+
+const overseasChineseExternal: Localized[] = [
+  {
+    zh: "世界華人社團聯合總會僑生獎學金",
+    en: "Scholarship for Overseas Chinese Students by the World Federation of Chinese Associations",
+  },
+  {
+    zh: "僑務委員會僑生助學金",
+    en: "Overseas Community Affairs Council (OCAC) Financial Assistance for Overseas Chinese Students",
+  },
+  {
+    zh: "全球華僑校友總會僑生獎學金",
+    en: "United Chinese Alumni Association Scholarship for Overseas Chinese Students",
+  },
+];
 
 export default function FundingPage() {
   const { t } = useLocale();
@@ -183,6 +323,118 @@ export default function FundingPage() {
           <p className="mt-1 text-sm">Try another status or source.</p>
         </div>
       )}
+
+      {/* --- Scholarships (separate section, same page) --------------------- */}
+      <div className="my-16 border-t" />
+
+      <section id="scholarships">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t(scholarshipsHeading)}
+          </h2>
+          <p className="mt-2 max-w-2xl text-muted-foreground">
+            {t(scholarshipsIntro)}
+          </p>
+        </div>
+
+        <Card className="mb-10 bg-muted/30">
+          <CardContent className="pt-6">
+            <ul className="space-y-3">
+              {scholarshipNotes.map((note) => (
+                <li key={note.en} className="flex items-start gap-2 text-sm">
+                  <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <span className="text-muted-foreground">{t(note)}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        <div className="mb-10 grid gap-4 md:grid-cols-3">
+          {scholarshipTiers.map((tier) => (
+            <Card key={tier.id} className="h-full">
+              <CardHeader>
+                <div className="mb-1 flex items-center gap-2">
+                  <Badge variant="secondary" className="font-normal">
+                    {t(tier.name)}
+                  </Badge>
+                </div>
+                <CardTitle className="flex items-center gap-2 text-2xl">
+                  <Coins className="size-5 text-primary" />
+                  {tier.amountLabel}
+                </CardTitle>
+                <CardDescription>{t(tier.description)}</CardDescription>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="mb-10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <GraduationCap className="size-5 text-primary" />
+              {t(qualificationsHeading)}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {qualifications.map((q) => (
+                <li key={q.en} className="flex items-start gap-2 text-sm">
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <span>{t(q)}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        <div className="mb-4">
+          <h3 className="text-xl font-semibold tracking-tight">
+            {t(overseasChineseHeading)}
+          </h3>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Landmark className="size-5 text-primary" />
+                {t(overseasChineseThuHeading)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-4">
+                {overseasChineseThu.map((s) => (
+                  <li key={s.name.en}>
+                    <p className="text-sm font-medium">{t(s.name)}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {t(s.detail)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Landmark className="size-5 text-primary" />
+                {t(overseasChineseExternalHeading)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                {overseasChineseExternal.map((s) => (
+                  <li key={s.en} className="text-sm text-muted-foreground">
+                    {t(s)}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
     </div>
   );
 }
