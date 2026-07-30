@@ -4,6 +4,7 @@ import {
   DATE_LOCALE,
   GENERATED_PASSWORD_LENGTH,
   PASSWORD_ALPHABET,
+  PG_UNIQUE_VIOLATION,
   TIME_ZONE,
 } from "@/constant"
 
@@ -57,6 +58,27 @@ export function generatePassword(length = GENERATED_PASSWORD_LENGTH): string {
     out += PASSWORD_ALPHABET[value % PASSWORD_ALPHABET.length]
   }
   return out
+}
+
+/**
+ * What every server action returns: a flag the caller branches on and a
+ * sentence it can toast, success or failure alike.
+ */
+export type ActionResult =
+  | { success: true; message: string }
+  | { success: false; message: string }
+
+/**
+ * True when a write failed because it collided with a unique index — a taken
+ * email or slug. Drizzle wraps the driver error, so the SQLSTATE can sit on
+ * either the error or its `cause`. Actions use it to turn a lost race into the
+ * same message the pre-check would have produced.
+ */
+export function isUniqueViolation(error: unknown): boolean {
+  const code =
+    (error as { code?: string })?.code ??
+    (error as { cause?: { code?: string } })?.cause?.code
+  return code === PG_UNIQUE_VIOLATION
 }
 
 /** Up to two initials for an avatar, working for "Chen Yi-Ling 陳怡玲" too. */

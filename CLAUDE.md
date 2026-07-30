@@ -23,7 +23,8 @@ Rules that follow from the table:
   starts with a `dal.ts` guard (`requireAdmin`, `requireWriter`, …) — a page
   guard does not protect an action, which is its own entry point. Validate input
   with the domain's zod schema, call a repository, `revalidatePath()`, and return
-  `{ success: boolean; message: string }` so the caller can toast it.
+  the shared `ActionResult` from `lib/utils.ts` — `{ success, message }`, with a
+  sentence the caller can toast either way.
 - **Repositories.** The only place that imports `@/db` (besides `db/`,
   `lib/auth.ts` and `seed.ts`). Pages and actions never build queries
   themselves. Repositories take and return plain data — no `redirect()`, no

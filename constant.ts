@@ -53,6 +53,23 @@ export const TIME_ZONE = "Asia/Taipei";
 /** Formatting locale. `en-CA` gives ISO-like `2026-07-30`, as the tables expect. */
 export const DATE_LOCALE = "en-CA";
 
+// ---------- Taxonomy ----------
+
+/** The ERD's CATEGORIES.kind enum: a category is scoped to posts or to FAQs. */
+export const CATEGORY_KINDS = ["post", "faq"] as const;
+
+/** Kind filter tabs on the taxonomy screen. */
+export const CATEGORY_KIND_TABS = ["all", ...CATEGORY_KINDS] as const;
+
+/** Slugs are lowercase words joined by single hyphens: `dual-degree`. */
+export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export const SLUG_MAX_LENGTH = 64;
+export const NAME_MAX_LENGTH = 120;
+
+/** Highest `sortOrder` the forms accept — the column is a plain integer. */
+export const MAX_SORT_ORDER = 999;
+
 // ---------- Filter tabs ----------
 
 /**

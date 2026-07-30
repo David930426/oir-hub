@@ -11,6 +11,7 @@ import {
   uniqueIndex,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
+import { CATEGORY_KINDS } from "@/constant";
 import { user } from "./auth.schema";
 
 /**
@@ -21,7 +22,7 @@ import { user } from "./auth.schema";
  * English is optional and falls back to Chinese on the site (see lib/i18n.ts).
  */
 
-export const categoryKind = pgEnum("category_kind", ["post", "faq"]);
+export const categoryKind = pgEnum("category_kind", CATEGORY_KINDS);
 
 export const postType = pgEnum("post_type", ["news", "guide", "page", "notice"]);
 
