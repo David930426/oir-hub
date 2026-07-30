@@ -81,6 +81,13 @@ export function isUniqueViolation(error: unknown): boolean {
   return code === PG_UNIQUE_VIOLATION
 }
 
+/** File sizes as the media library shows them: `18 KB`, `2.4 MB`. */
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
+
 /** Up to two initials for an avatar, working for "Chen Yi-Ling 陳怡玲" too. */
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)

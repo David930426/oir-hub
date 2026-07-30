@@ -148,13 +148,6 @@ export function formatTerm(academicYear: string, term: string): string {
   return `${academicYear}-${term}`;
 }
 
-/** Human-readable file size for a `sizeBytes` column. */
-export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
 /** TWD amounts, e.g. `NT$120,000`. */
 export function formatTwd(amount: number): string {
   return `NT$${amount.toLocaleString("en-US")}`;

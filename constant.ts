@@ -70,6 +70,32 @@ export const NAME_MAX_LENGTH = 120;
 /** Highest `sortOrder` the forms accept — the column is a plain integer. */
 export const MAX_SORT_ORDER = 999;
 
+// ---------- Media library ----------
+
+/** Upload ceiling, matching what the upload form promises. */
+export const MEDIA_MAX_BYTES = 20 * 1024 * 1024;
+
+/**
+ * Accepted uploads, mapped to the short label the table shows. The office
+ * publishes forms and guidelines, so this is deliberately a short list.
+ */
+export const MEDIA_MIME_LABELS: Record<string, string> = {
+  "application/pdf": "PDF",
+  "application/msword": "DOC",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "DOCX",
+  "application/vnd.ms-excel": "XLS",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "XLSX",
+};
+
+/** `accept` attribute for the file input. Same list as above, as a string. */
+export const MEDIA_ACCEPT_ATTR = Object.keys(MEDIA_MIME_LABELS).join(",");
+
+/** How long a presigned download link stays valid, in seconds. */
+export const MEDIA_DOWNLOAD_TTL_SECONDS = 300;
+
+/** Academic year as the office writes it: `115-2` — year, then term 1 or 2. */
+export const ACADEMIC_YEAR_PATTERN = /^\d{3}-[12]$/;
+
 // ---------- Filter tabs ----------
 
 /**
