@@ -52,11 +52,7 @@ import {
   sourcesForFaq,
 } from "@/lib/mock";
 import { isUntranslated } from "@/lib/i18n";
-
-/** Answers older than this many days are flagged for re-review. */
-const REVIEW_INTERVAL_DAYS = 180;
-
-const publishTabs = ["all", "published", "unpublished"] as const;
+import { FAQ_PUBLISH_TABS, REVIEW_INTERVAL_DAYS } from "@/constant";
 
 export default function AdminFaqsPage() {
   const [publishState, setPublishState] = useState<string>("all");
@@ -110,7 +106,7 @@ export default function AdminFaqsPage() {
       <div className="space-y-3">
         <Tabs value={publishState} onValueChange={setPublishState}>
           <TabsList>
-            {publishTabs.map((p) => (
+            {FAQ_PUBLISH_TABS.map((p) => (
               <TabsTrigger key={p} value={p} className="capitalize">
                 {p}
               </TabsTrigger>

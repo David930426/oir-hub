@@ -51,9 +51,7 @@ import {
   daysUntil,
 } from "@/lib/mock";
 import type { KbStatus } from "@/lib/mock";
-
-/** Answers older than this many days are flagged for re-review. */
-const REVIEW_INTERVAL_DAYS = 180;
+import { REVIEW_INTERVAL_DAYS } from "@/constant";
 
 export default function AdminDashboardPage() {
   const maxChats = Math.max(...chatsPerDay.map((d) => d.count));

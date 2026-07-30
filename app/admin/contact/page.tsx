@@ -32,8 +32,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/admin/page-header";
 import { contactMessages } from "@/lib/mock";
-
-const stateTabs = ["unresolved", "resolved", "all"] as const;
+import { CONTACT_STATE_TABS } from "@/constant";
 
 export default function AdminContactPage() {
   const [state, setState] = useState<string>("unresolved");
@@ -77,7 +76,7 @@ export default function AdminContactPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs value={state} onValueChange={setState}>
           <TabsList>
-            {stateTabs.map((s) => (
+            {CONTACT_STATE_TABS.map((s) => (
               <TabsTrigger key={s} value={s} className="capitalize">
                 {s}
                 {s === "unresolved" && unresolved > 0 && (

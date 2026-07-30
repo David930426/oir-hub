@@ -55,8 +55,7 @@ import {
   kbStatusMeta,
 } from "@/lib/mock";
 import type { KbStatus } from "@/lib/mock";
-
-const statusTabs = ["all", "indexed", "pending", "stale", "failed"] as const;
+import { KB_STATUS_TABS } from "@/constant";
 
 export default function AdminKnowledgePage() {
   const [status, setStatus] = useState<string>("all");
@@ -161,7 +160,7 @@ export default function AdminKnowledgePage() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Tabs value={status} onValueChange={setStatus}>
           <TabsList>
-            {statusTabs.map((s) => (
+            {KB_STATUS_TABS.map((s) => (
               <TabsTrigger key={s} value={s}>
                 {s === "all" ? "All" : kbStatusMeta[s].label}
               </TabsTrigger>

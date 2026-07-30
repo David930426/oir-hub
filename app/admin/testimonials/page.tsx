@@ -41,8 +41,7 @@ import {
   testimonialStatusMeta,
   testimonials,
 } from "@/lib/mock";
-
-const statusTabs = ["all", "published", "draft", "archived"] as const;
+import { PUBLISH_STATUS_TABS } from "@/constant";
 
 export default function AdminTestimonialsPage() {
   const [status, setStatus] = useState<string>("all");
@@ -85,7 +84,7 @@ export default function AdminTestimonialsPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs value={status} onValueChange={setStatus}>
           <TabsList>
-            {statusTabs.map((s) => (
+            {PUBLISH_STATUS_TABS.map((s) => (
               <TabsTrigger key={s} value={s}>
                 {s === "all" ? "All" : testimonialStatusMeta[s].label}
               </TabsTrigger>

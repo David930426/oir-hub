@@ -51,8 +51,7 @@ import {
   tagsForPost,
 } from "@/lib/mock";
 import { isUntranslated } from "@/lib/i18n";
-
-const statusTabs = ["all", "published", "draft", "archived"] as const;
+import { PUBLISH_STATUS_TABS } from "@/constant";
 
 export default function AdminPostsPage() {
   const [status, setStatus] = useState<string>("all");
@@ -97,7 +96,7 @@ export default function AdminPostsPage() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Tabs value={status} onValueChange={setStatus}>
           <TabsList>
-            {statusTabs.map((s) => (
+            {PUBLISH_STATUS_TABS.map((s) => (
               <TabsTrigger key={s} value={s}>
                 {s === "all" ? "All" : postStatusMeta[s].label}
               </TabsTrigger>

@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import { boolean, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { STAFF_ROLES } from "@/constant";
 import { mediaFiles, posts } from "./cms.schema";
 import { faqs } from "./knowledge.schema";
 import { siteStats, tcornerSlots } from "./mobility.schema";
@@ -21,7 +22,7 @@ import { siteStats, tcornerSlots } from "./mobility.schema";
  * database column names use snake_case.
  */
 
-export const userRole = pgEnum("user_role", ["admin", "editor", "viewer"]);
+export const userRole = pgEnum("user_role", STAFF_ROLES);
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),

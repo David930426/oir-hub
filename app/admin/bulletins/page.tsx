@@ -61,8 +61,7 @@ import {
   mediaFiles,
   programs,
 } from "@/lib/mock";
-
-const statusTabs = ["all", "open", "closed", "archived"] as const;
+import { OPEN_STATUS_TABS } from "@/constant";
 
 export default function AdminBulletinsPage() {
   const [status, setStatus] = useState<string>("all");
@@ -213,7 +212,7 @@ export default function AdminBulletinsPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs value={status} onValueChange={setStatus}>
           <TabsList>
-            {statusTabs.map((s) => (
+            {OPEN_STATUS_TABS.map((s) => (
               <TabsTrigger key={s} value={s}>
                 {s === "all" ? "All" : bulletinStatusMeta[s].label}
               </TabsTrigger>

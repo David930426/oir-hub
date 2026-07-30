@@ -4,6 +4,7 @@ import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { STAFF_ROLES, WRITER_ROLES } from "@/constant";
 
 /**
  * Data Access Layer.
@@ -22,13 +23,14 @@ import { auth } from "@/lib/auth";
 
 /**
  * Roles that may enter the admin console — the ERD's USERS.role enum, and the
- * only roles that exist: there are no student accounts.
+ * only roles that exist: there are no student accounts. The lists live in
+ * constant.ts; these aliases keep the guards below readable.
  */
-export const staffRoles = ["admin", "editor", "viewer"] as const;
+export const staffRoles = STAFF_ROLES;
 export type StaffRole = (typeof staffRoles)[number];
 
 /** Roles allowed to create or change content. Viewers are read-only. */
-export const writerRoles = ["admin", "editor"] as const satisfies readonly StaffRole[];
+export const writerRoles = WRITER_ROLES satisfies readonly StaffRole[];
 
 export function isStaffRole(role: string | null | undefined): role is StaffRole {
   return typeof role === "string" && (staffRoles as readonly string[]).includes(role);
