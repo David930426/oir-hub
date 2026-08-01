@@ -15,6 +15,7 @@ The public site is anonymous; `/admin` is the OIR staff console.
 | Components used by one page only | next to that page | `app/admin/users/columns.tsx` |
 | Helpers (`cn`, formatters) | `lib/utils.ts` | — |
 | Access control | `dal.ts` | `require*` / `has*` |
+| Object storage (MinIO) | `lib/storage.ts` | — |
 | Schema | `db/schema/<domain>.schema.ts` | — |
 
 Rules that follow from the table:
@@ -23,7 +24,8 @@ Rules that follow from the table:
   starts with a `dal.ts` guard (`requireAdmin`, `requireWriter`, …) — a page
   guard does not protect an action, which is its own entry point. Validate input
   with the domain's zod schema, call a repository, `revalidatePath()`, and return
-  `{ success: boolean; message: string }` so the caller can toast it.
+  the shared `ActionResult` from `lib/utils.ts` — `{ success, message }`, with a
+  sentence the caller can toast either way.
 - **Repositories.** The only place that imports `@/db` (besides `db/`,
   `lib/auth.ts` and `seed.ts`). Pages and actions never build queries
   themselves. Repositories take and return plain data — no `redirect()`, no
@@ -85,6 +87,11 @@ just not for forms.
   (`EnumBadge`), so a stored value reads the same everywhere.
 - **Logging** uses `lib/logger.ts` (pino). Log unexpected errors in actions; do
   not leak internals into the message shown to the user.
+- **Uploads** go through a server action into MinIO via `lib/storage.ts`; only the
+  object name is stored, on `media_files.storage_path`. The bucket is private, so
+  downloads go through `GET /api/media/[id]`, which checks the session and
+  redirects to a short-lived presigned URL. Write the bytes before the row and
+  clean the object up if the insert fails.
 - **`lib/mock/`** is design-stage data. Screens still reading from it are not yet
   wired to the database; move them onto a repository when their turn comes.
 

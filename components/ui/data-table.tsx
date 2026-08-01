@@ -69,6 +69,12 @@ export type DataTableProps<TData, TValue> = {
   /** Shown in place of rows when nothing matches. */
   emptyMessage?: string;
   pageSize?: number;
+  /**
+   * Columns to define but not render — a column the toolbar filters on without
+   * the reader needing a column for it, such as an archived flag behind a
+   * switch. Hidden columns still take part in filtering.
+   */
+  hiddenColumnIds?: string[];
   className?: string;
 };
 
@@ -78,6 +84,7 @@ export function DataTable<TData, TValue>({
   toolbar,
   emptyMessage = "No results.",
   pageSize = DEFAULT_PAGE_SIZE,
+  hiddenColumnIds,
   className,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -95,11 +102,17 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize } },
+    initialState: {
+      pagination: { pageSize },
+      columnVisibility: Object.fromEntries(
+        (hiddenColumnIds ?? []).map((id) => [id, false])
+      ),
+    },
   });
 
   const rows = table.getRowModel().rows;
   const pageCount = table.getPageCount();
+  const visibleColumnCount = table.getVisibleFlatColumns().length;
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -134,7 +147,7 @@ export function DataTable<TData, TValue>({
               {rows.length === 0 ? (
                 <TableRow className="hover:bg-transparent">
                   <TableCell
-                    colSpan={columns.length}
+                    colSpan={visibleColumnCount}
                     className="py-12 text-center text-sm text-muted-foreground"
                   >
                     {emptyMessage}

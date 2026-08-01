@@ -1,6 +1,6 @@
 import { Download, FileSpreadsheet, FileText, FileType } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatBytes } from "@/lib/mock/labels";
+import { formatBytes } from "@/lib/utils";
 import type { MediaFile } from "@/lib/mock/types";
 
 /** Short kind label derived from `mimeType`. */

@@ -30,7 +30,6 @@ import { EnumBadge } from "@/components/shared/enum-badge";
 import {
   attachmentsForPost,
   categoriesOfKind,
-  formatBytes,
   postStatusMeta,
   postTypeMeta,
   posts,
@@ -39,6 +38,7 @@ import {
   users,
 } from "@/lib/mock";
 import type { Post } from "@/lib/mock";
+import { formatBytes } from "@/lib/utils";
 
 /** Blank row used when the editor is opened at /admin/posts/new. */
 const emptyPost: Post = {

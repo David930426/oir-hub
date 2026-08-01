@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/dal";
 import { logger } from "@/lib/logger";
-import { GENERIC_ACTION_ERROR, PG_UNIQUE_VIOLATION } from "@/constant";
+import { GENERIC_ACTION_ERROR } from "@/constant";
 import {
   countActiveAdmins,
   createStaffUser,
@@ -13,6 +13,7 @@ import {
   setUserPassword,
   updateStaffUser,
 } from "@/lib/repositories/user.repository";
+import { isUniqueViolation, type ActionResult } from "@/lib/utils";
 import {
   createStaffUserSchema,
   resetPasswordSchema,
@@ -27,18 +28,6 @@ import {
  * layout guards the screen, but an action is its own entry point and a hidden
  * button is not access control.
  */
-
-export type ActionResult =
-  | { success: true; message: string }
-  | { success: false; message: string };
-
-/** Postgres unique-violation, surfaced through Drizzle's wrapped driver error. */
-function isUniqueViolation(error: unknown): boolean {
-  const code =
-    (error as { code?: string })?.code ??
-    (error as { cause?: { code?: string } })?.cause?.code;
-  return code === PG_UNIQUE_VIOLATION;
-}
 
 // ---------- Create ----------
 

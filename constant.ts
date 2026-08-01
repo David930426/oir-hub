@@ -53,6 +53,49 @@ export const TIME_ZONE = "Asia/Taipei";
 /** Formatting locale. `en-CA` gives ISO-like `2026-07-30`, as the tables expect. */
 export const DATE_LOCALE = "en-CA";
 
+// ---------- Taxonomy ----------
+
+/** The ERD's CATEGORIES.kind enum: a category is scoped to posts or to FAQs. */
+export const CATEGORY_KINDS = ["post", "faq"] as const;
+
+/** Kind filter tabs on the taxonomy screen. */
+export const CATEGORY_KIND_TABS = ["all", ...CATEGORY_KINDS] as const;
+
+/** Slugs are lowercase words joined by single hyphens: `dual-degree`. */
+export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export const SLUG_MAX_LENGTH = 64;
+export const NAME_MAX_LENGTH = 120;
+
+/** Highest `sortOrder` the forms accept — the column is a plain integer. */
+export const MAX_SORT_ORDER = 999;
+
+// ---------- Media library ----------
+
+/** Upload ceiling, matching what the upload form promises. */
+export const MEDIA_MAX_BYTES = 20 * 1024 * 1024;
+
+/**
+ * Accepted uploads, mapped to the short label the table shows. The office
+ * publishes forms and guidelines, so this is deliberately a short list.
+ */
+export const MEDIA_MIME_LABELS: Record<string, string> = {
+  "application/pdf": "PDF",
+  "application/msword": "DOC",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "DOCX",
+  "application/vnd.ms-excel": "XLS",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "XLSX",
+};
+
+/** `accept` attribute for the file input. Same list as above, as a string. */
+export const MEDIA_ACCEPT_ATTR = Object.keys(MEDIA_MIME_LABELS).join(",");
+
+/** How long a presigned download link stays valid, in seconds. */
+export const MEDIA_DOWNLOAD_TTL_SECONDS = 300;
+
+/** Academic year as the office writes it: `115-2` — year, then term 1 or 2. */
+export const ACADEMIC_YEAR_PATTERN = /^\d{3}-[12]$/;
+
 // ---------- Filter tabs ----------
 
 /**
