@@ -105,6 +105,8 @@ export type Program = {
   overview: Localized;
   active: boolean;
   sortOrder: number;
+  eligibleYears?: Localized;
+  departmentNote?: Localized;
 };
 
 export type BulletinStatus = "open" | "closed" | "archived";
@@ -139,6 +141,9 @@ export type PartnerSchool = {
   websiteUrl: string;
   briefFileId: string | null;
   active: boolean;
+  tuitionHome?: string;
+  tuitionPartner?: string;
+  subsidyNote?: Localized;
 };
 
 export type TestimonialStatus = "draft" | "published" | "archived";
