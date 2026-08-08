@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { daysUntil, toneClasses, type Tone } from "@/lib/mock/labels";
+import { cn, daysUntil } from "@/lib/utils";
+import { toneClasses, type Tone } from "@/lib/mock/labels";
 
 /**
  * Renders any lowercase ERD enum through its label/tone map, so a stored value

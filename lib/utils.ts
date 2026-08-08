@@ -45,6 +45,31 @@ export function formatDay(date: Date): string {
   return dayFormatter.format(date)
 }
 
+/**
+ * Whole days from today until `date` (a `YYYY-MM-DD` string), negative once it
+ * has passed.
+ *
+ * Both sides are reduced to a calendar day in the office's timezone before
+ * subtracting, so "closes today" means today in Taipei rather than wherever the
+ * reader happens to be — and a deadline never appears to move by an hour.
+ */
+export function daysUntil(date: string): number {
+  const today = dayFormatter.format(new Date())
+  const start = Date.parse(`${today}T00:00:00Z`)
+  const end = Date.parse(`${date}T00:00:00Z`)
+  if (Number.isNaN(start) || Number.isNaN(end)) return 0
+
+  return Math.round((end - start) / 86_400_000)
+}
+
+/**
+ * True when `date` is further in the past than `days` — how the console decides
+ * an FAQ is overdue for review.
+ */
+export function isOlderThan(date: Date, days: number): boolean {
+  return Date.now() - date.getTime() > days * 86_400_000
+}
+
 /** `2026-07-30 08:55` */
 export function formatMinute(date: Date): string {
   return minuteFormatter.format(date).replace(", ", " ")

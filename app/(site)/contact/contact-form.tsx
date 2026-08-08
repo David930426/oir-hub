@@ -2,7 +2,7 @@
 
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Send } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { submitContactMessageAction } from "@/lib/actions/contact.action";
 import { ContactInput, contactSchema } from "@/lib/validator/contact.validator";
 
 /** Topics map to how the office routes an incoming message. */
@@ -49,17 +50,30 @@ export function ContactForm() {
     register,
     control,
     handleSubmit,
-    formState: { errors },
+    reset,
+    formState: { errors, isSubmitting },
   } = useForm<ContactInput>({
     resolver: zodResolver(contactSchema),
     defaultValues: { name: "", email: "", topic: "", body: "" },
   });
 
-  // Static design only — submission is not wired to a backend yet.
-  const onSubmit = (data: ContactInput) => {
-    toast.success("Message sent", {
-      description: `We'll reply to ${data.email} within 3 working days.`,
-    });
+  /**
+   * Files the message in the console's inbox.
+   *
+   * The action is deliberately open to anonymous visitors — a contact form that
+   * needed an account would defeat its own purpose — so the validator's limits
+   * are what stand in for a guard.
+   */
+  const onSubmit = async (data: ContactInput) => {
+    const result = await submitContactMessageAction(data);
+
+    if (!result.success) {
+      toast.error("Could not send your message", { description: result.message });
+      return;
+    }
+
+    toast.success("Message sent", { description: result.message });
+    reset();
   };
 
   return (
@@ -140,8 +154,17 @@ export function ContactForm() {
               {errors.body && <FieldError>{errors.body.message}</FieldError>}
             </Field>
 
-            <Button type="submit" size="lg" className="w-full sm:w-auto">
-              <Send className="size-4" />
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full sm:w-auto"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Send className="size-4" />
+              )}
               Send message
             </Button>
           </FieldGroup>

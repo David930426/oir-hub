@@ -216,6 +216,14 @@ export async function replaceKbChunks(
   });
 }
 
+/** A document's chunks in order, for the console's document detail screen. */
+export async function listChunksForDocument(kbDocumentId: string) {
+  return db.query.kbChunks.findMany({
+    where: eq(kbChunks.kbDocumentId, kbDocumentId),
+    orderBy: [asc(kbChunks.index)],
+  });
+}
+
 export async function deleteKbDocument(id: string) {
   // KB_CHUNKS cascades; the Qdrant points are removed by the caller.
   await db.delete(kbDocuments).where(eq(kbDocuments.id, id));

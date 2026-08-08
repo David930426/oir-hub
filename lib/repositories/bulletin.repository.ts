@@ -16,6 +16,7 @@ import type {
 
 export type BulletinRecord = {
   id: string;
+  programId: string;
   academicYear: string;
   term: string;
   titleZh: string;
@@ -34,6 +35,8 @@ export async function listBulletins(): Promise<BulletinRecord[]> {
   return db
     .select({
       id: bulletins.id,
+      // Carried so the public list can filter by program without a second join.
+      programId: bulletins.programId,
       academicYear: bulletins.academicYear,
       term: bulletins.term,
       titleZh: bulletins.titleZh,

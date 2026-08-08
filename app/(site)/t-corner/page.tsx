@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import {
   CalendarCheck,
@@ -19,10 +17,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { activeTcornerSlots, weekdayMeta, weekdayOrder } from "@/lib/mock";
+import { weekdayMeta, weekdayOrder } from "@/lib/mock/labels";
+import { listActiveTcornerSlots } from "@/lib/repositories/tcorner.repository";
 
-export default function TCornerPage() {
-  const slots = activeTcornerSlots();
+export default async function TCornerPage() {
+  // Only slots the office has left visible; hidden ones are for weeks it is away.
+  const slots = await listActiveTcornerSlots();
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">

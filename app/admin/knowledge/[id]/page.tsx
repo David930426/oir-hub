@@ -1,10 +1,9 @@
-"use client";
-
-import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, ArrowLeft, Copy, RefreshCcw } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ArrowLeft } from "lucide-react";
+import { PageHeader } from "@/components/admin/page-header";
+import { EnumBadge } from "@/components/shared/enum-badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,28 +13,35 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PageHeader } from "@/components/admin/page-header";
-import { EnumBadge } from "@/components/shared/enum-badge";
+import { requireStaff } from "@/dal";
+import { kbSourceTableMeta, kbStatusMeta } from "@/lib/mock/labels";
 import {
-  chunksForDocument,
-  getKbDocument,
-  kbSourceLabel,
-  kbSourceTableMeta,
-  kbStatusMeta,
-} from "@/lib/mock";
+  findKbDocumentById,
+  listChunksForDocument,
+} from "@/lib/repositories/knowledge.repository";
+import { formatMinute, pluralize } from "@/lib/utils";
 
-export default function AdminKbDocumentPage({
+/**
+ * One indexed document and the chunks the assistant actually retrieves.
+ *
+ * Read-only on purpose: the text here is derived from a content row, so the way
+ * to change it is to edit that row and re-index. Seeing the chunks is what makes
+ * a bad answer diagnosable — usually the split, not the model, is at fault.
+ */
+export default async function AdminKnowledgeDocumentPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
+  await requireStaff();
 
-  const doc = getKbDocument(id);
-  if (!doc) notFound();
+  const { id } = await params;
+  const [document, chunks] = await Promise.all([
+    findKbDocumentById(id),
+    listChunksForDocument(id),
+  ]);
 
-  const chunks = chunksForDocument(doc.id);
-  const totalTokens = chunks.reduce((sum, c) => sum + c.tokenCount, 0);
+  if (!document) notFound();
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -47,133 +53,67 @@ export default function AdminKbDocumentPage({
           </Link>
         </Button>
         <PageHeader
-          title={doc.title}
-          description={`Built from the ${kbSourceTableMeta[doc.sourceTable].label.toLowerCase()} row “${kbSourceLabel(doc.id)}”. Edit that row to change this document.`}
+          title={document.title}
+          description={`${pluralize(chunks.length, "chunk")} · version ${document.version} · ${
+            document.indexedAt
+              ? `indexed ${formatMinute(document.indexedAt)}`
+              : "never indexed"
+          }`}
         >
-          <Button variant="outline">
-            <RefreshCcw className="size-4" />
-            {doc.status === "failed" ? "Retry indexing" : "Re-index"}
-          </Button>
+          <EnumBadge value={document.sourceTable} meta={kbSourceTableMeta} />
+          <EnumBadge value={document.status} meta={kbStatusMeta} />
         </PageHeader>
       </div>
 
-      {doc.errorMessage && (
-        <Alert className="border-red-200 bg-red-50 text-red-900">
-          <AlertTriangle className="size-4" />
-          <AlertTitle>Indexing failed</AlertTitle>
-          <AlertDescription className="font-mono text-xs text-red-900/80">
-            {doc.errorMessage}
-          </AlertDescription>
+      {document.errorMessage && (
+        <Alert variant="destructive">
+          <AlertDescription>{document.errorMessage}</AlertDescription>
         </Alert>
       )}
 
       <Card>
-        <CardContent>
-          <dl className="grid gap-4 text-sm sm:grid-cols-6">
-            <div>
-              <dt className="text-muted-foreground">Source</dt>
-              <dd className="mt-1">
-                <EnumBadge value={doc.sourceTable} meta={kbSourceTableMeta} />
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Status</dt>
-              <dd className="mt-1">
-                <EnumBadge value={doc.status} meta={kbStatusMeta} />
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Language</dt>
-              <dd className="mt-1 font-medium">{doc.language}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Academic year</dt>
-              <dd className="mt-1 font-medium">{doc.academicYear ?? "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Version</dt>
-              <dd className="mt-1 font-medium tabular-nums">v{doc.version}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Indexed at</dt>
-              <dd className="mt-1 font-medium">{doc.indexedAt ?? "never"}</dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
-
-      <Card>
         <CardHeader>
-          <CardTitle className="text-base">Flattened content</CardTitle>
+          <CardTitle className="text-base">Flattened text</CardTitle>
           <CardDescription>
-            Plain text extracted from the source row, before chunking.
+            What the chunker was given. Edit the source row to change it.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {doc.content ? (
-            <p className="rounded-lg border bg-muted/30 p-4 text-sm leading-relaxed">
-              {doc.content}
-            </p>
-          ) : (
-            <p className="rounded-lg border border-dashed py-8 text-center text-sm text-muted-foreground">
-              Extraction produced no text — nothing was passed to the chunker.
-            </p>
-          )}
+          <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm">
+            {document.content}
+          </pre>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <CardTitle className="text-base">Chunks</CardTitle>
-              <CardDescription>
-                {chunks.length} chunks · {totalTokens.toLocaleString("en-US")}{" "}
-                tokens total. Each chunk ID doubles as its Qdrant point ID.
-              </CardDescription>
-            </div>
-            {chunks[0] && (
-              <Badge variant="outline" className="font-mono text-[10px]">
-                {chunks[0].embeddingModel}
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {chunks.length === 0 ? (
-            <p className="rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">
-              This document has not been chunked yet.
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {chunks.map((chunk) => (
-                <li key={chunk.id} className="rounded-lg border p-4">
-                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="flex size-6 items-center justify-center rounded bg-muted text-xs font-medium tabular-nums">
-                        {chunk.index}
-                      </span>
-                      <code className="text-xs text-muted-foreground">
-                        {chunk.id}
-                      </code>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs tabular-nums text-muted-foreground">
-                        {chunk.tokenCount} tokens
-                      </span>
-                      <Button variant="ghost" size="icon" className="size-7">
-                        <Copy className="size-3.5" />
-                        <span className="sr-only">Copy chunk {chunk.index}</span>
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="text-sm leading-relaxed">{chunk.content}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold">Chunks</h2>
+        {chunks.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Not chunked yet — re-index this document to build them.
+          </p>
+        ) : (
+          chunks.map((chunk) => (
+            <Card key={chunk.id}>
+              <CardHeader>
+                <div className="flex flex-wrap items-center gap-2">
+                  <CardTitle className="text-sm">Chunk {chunk.index + 1}</CardTitle>
+                  <Badge variant="outline" className="font-normal tabular-nums">
+                    ~{chunk.tokenCount} tokens
+                  </Badge>
+                  <Badge variant="outline" className="font-mono text-[10px]">
+                    {chunk.embeddingModel}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                  {chunk.content}
+                </p>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </section>
     </div>
   );
 }

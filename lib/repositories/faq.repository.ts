@@ -54,11 +54,16 @@ export async function listFaqs(): Promise<FaqRecord[]> {
     .orderBy(desc(faqs.lastReviewedAt));
 }
 
-/** Published FAQs for the public site and for indexing. */
+/**
+ * Published FAQs for the public site.
+ *
+ * Sources come back with their media file, because the citation a student
+ * checks is the filename rather than the id.
+ */
 export async function listPublishedFaqs() {
   return db.query.faqs.findMany({
     where: eq(faqs.published, true),
-    with: { category: true, sources: true },
+    with: { category: true, sources: { with: { mediaFile: true } } },
     orderBy: [asc(faqs.categoryId)],
   });
 }
