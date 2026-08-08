@@ -10,6 +10,7 @@ The public site is anonymous; `/admin` is the OIR staff console.
 | Server actions | `lib/actions/` | `<domain>.action.ts` |
 | Database reads & writes | `lib/repositories/` | `<domain>.repository.ts` |
 | Zod schemas | `lib/validator/` | `<domain>.validator.ts` |
+| Outside services (Ollama, Qdrant) | `lib/external/` | `<service>.ts` |
 | Shared constants | `constant.ts` (repo root) | `SCREAMING_SNAKE_CASE` exports |
 | Reusable components | `components/ui/` | kebab-case `.tsx` |
 | Components used by one page only | next to that page | `app/admin/users/columns.tsx` |
@@ -25,7 +26,18 @@ Rules that follow from the table:
   guard does not protect an action, which is its own entry point. Validate input
   with the domain's zod schema, call a repository, `revalidatePath()`, and return
   the shared `ActionResult` from `lib/utils.ts` — `{ success, message }`, with a
-  sentence the caller can toast either way.
+  sentence the caller can toast either way, plus an optional `data` for the few
+  callers that need a value back. Use the helpers rather than rebuilding them:
+  `parseInput` (validate, or return the failure as-is), `ok` / `fail`,
+  `describeError`, `emptyToNull`, `pluralize`. The public assistant and the
+  contact form are the only guardless actions — the site is anonymous by
+  design — and each says so at the top of its file.
+- **External services.** `lib/external/` is the only place that calls something
+  the app does not own. Everything goes through `fetchJson` in
+  `lib/external/http.ts`, which adds a timeout, retries, and turns any failure
+  into an `ExternalApiError` carrying the sentence the user should see;
+  `describeError` picks that sentence up. Actions call these clients, never
+  `fetch` directly.
 - **Repositories.** The only place that imports `@/db` (besides `db/`,
   `lib/auth.ts` and `seed.ts`). Pages and actions never build queries
   themselves. Repositories take and return plain data — no `redirect()`, no

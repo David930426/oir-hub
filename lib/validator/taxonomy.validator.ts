@@ -1,11 +1,12 @@
 import z from "zod";
+import { CATEGORY_KINDS } from "@/constant";
 import {
-  CATEGORY_KINDS,
-  MAX_SORT_ORDER,
-  NAME_MAX_LENGTH,
-  SLUG_MAX_LENGTH,
-  SLUG_PATTERN,
-} from "@/constant";
+  idSchema,
+  optionalText,
+  requiredZh,
+  slugSchema,
+  sortOrderSchema,
+} from "./common.validator";
 
 /**
  * Categories and tags — the ERD's CATEGORIES and TAGS.
@@ -17,33 +18,19 @@ import {
 
 export const categoryKindSchema = z.enum(CATEGORY_KINDS);
 
-const slugSchema = z
-  .string()
-  .min(2, "A slug needs at least two characters.")
-  .max(SLUG_MAX_LENGTH, "Slug is too long.")
-  .regex(SLUG_PATTERN, "Use lowercase letters, numbers and single hyphens.");
-
-const nameZhSchema = z
-  .string()
-  .min(1, "中文 name is required.")
-  .max(NAME_MAX_LENGTH, "Name is too long.");
-
-const nameEnSchema = z.string().max(NAME_MAX_LENGTH, "Name is too long.");
+const nameZhSchema = requiredZh("name");
+const nameEnSchema = optionalText("Name");
 
 export const createCategorySchema = z.object({
   slug: slugSchema,
   kind: categoryKindSchema,
   nameZh: nameZhSchema,
   nameEn: nameEnSchema,
-  sortOrder: z
-    .number("Sort order must be a number.")
-    .int("Sort order must be a whole number.")
-    .min(0, "Sort order cannot be negative.")
-    .max(MAX_SORT_ORDER, `Sort order must be ${MAX_SORT_ORDER} or less.`),
+  sortOrder: sortOrderSchema,
 });
 
 export const updateCategorySchema = createCategorySchema.extend({
-  id: z.string().min(1),
+  id: idSchema,
 });
 
 export const createTagSchema = z.object({
@@ -52,9 +39,7 @@ export const createTagSchema = z.object({
   nameEn: nameEnSchema,
 });
 
-export const updateTagSchema = createTagSchema.extend({
-  id: z.string().min(1),
-});
+export const updateTagSchema = createTagSchema.extend({ id: idSchema });
 
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
