@@ -11,7 +11,7 @@ import {
   uniqueIndex,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
-import { CATEGORY_KINDS } from "@/constant";
+import { CATEGORY_KINDS, POST_TYPES, PUBLISH_STATUSES } from "@/constant";
 import { user } from "./auth.schema";
 
 /**
@@ -24,13 +24,9 @@ import { user } from "./auth.schema";
 
 export const categoryKind = pgEnum("category_kind", CATEGORY_KINDS);
 
-export const postType = pgEnum("post_type", ["news", "guide", "page", "notice"]);
+export const postType = pgEnum("post_type", POST_TYPES);
 
-export const postStatus = pgEnum("post_status", [
-  "draft",
-  "published",
-  "archived",
-]);
+export const postStatus = pgEnum("post_status", PUBLISH_STATUSES);
 
 /**
  * Shared taxonomy for posts and FAQs. `kind` scopes a category to one or the

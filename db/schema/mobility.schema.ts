@@ -12,6 +12,13 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import {
+  FUNDING_SOURCES,
+  OPEN_STATUSES,
+  PROGRAM_TYPES,
+  PUBLISH_STATUSES,
+  WEEKDAYS,
+} from "@/constant";
 import { user } from "./auth.schema";
 import { mediaFiles } from "./cms.schema";
 
@@ -21,39 +28,18 @@ import { mediaFiles } from "./cms.schema";
  * and SITE_STATS.
  */
 
-export const programType = pgEnum("program_type", [
-  "exchange",
-  "dualDegree",
-  "shortTerm",
-  "internship",
-  "language",
-]);
+export const programType = pgEnum("program_type", PROGRAM_TYPES);
 
-export const bulletinStatus = pgEnum("bulletin_status", [
-  "open",
-  "closed",
-  "archived",
-]);
+export const bulletinStatus = pgEnum("bulletin_status", OPEN_STATUSES);
 
-export const testimonialStatus = pgEnum("testimonial_status", [
-  "draft",
-  "published",
-  "archived",
-]);
+export const testimonialStatus = pgEnum("testimonial_status", PUBLISH_STATUSES);
 
-export const fundingSource = pgEnum("funding_source", [
-  "moe", // Ministry of Education
-  "university",
-  "external",
-]);
+/** `moe` is the Ministry of Education. */
+export const fundingSource = pgEnum("funding_source", FUNDING_SOURCES);
 
-export const fundingStatus = pgEnum("funding_status", [
-  "open",
-  "closed",
-  "archived",
-]);
+export const fundingStatus = pgEnum("funding_status", OPEN_STATUSES);
 
-export const weekday = pgEnum("weekday", ["mon", "tue", "wed", "thu", "fri"]);
+export const weekday = pgEnum("weekday", WEEKDAYS);
 
 /** One language threshold a partner school accepts, e.g. JLPT N2. */
 export type LanguageRequirement = { test: string; score: string };

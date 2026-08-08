@@ -9,6 +9,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { FAQ_AUDIENCES, KB_SOURCE_TABLES, KB_STATUSES } from "@/constant";
 import { user } from "./auth.schema";
 import { categories, mediaFiles } from "./cms.schema";
 
@@ -22,22 +23,11 @@ import { categories, mediaFiles } from "./cms.schema";
  * into Qdrant. To correct an answer, edit the source row and re-index.
  */
 
-export const faqAudience = pgEnum("faq_audience", ["student", "parent", "dept"]);
+export const faqAudience = pgEnum("faq_audience", FAQ_AUDIENCES);
 
-export const kbSourceTable = pgEnum("kb_source_table", [
-  "faq",
-  "post",
-  "bulletin",
-  "testimonial",
-  "file",
-]);
+export const kbSourceTable = pgEnum("kb_source_table", KB_SOURCE_TABLES);
 
-export const kbStatus = pgEnum("kb_status", [
-  "pending",
-  "indexed",
-  "stale",
-  "failed",
-]);
+export const kbStatus = pgEnum("kb_status", KB_STATUSES);
 
 /** A staff-written question and answer. */
 export const faqs = pgTable(

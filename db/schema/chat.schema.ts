@@ -11,6 +11,7 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
+import { CHAT_ROLES, FEEDBACK_REASONS } from "@/constant";
 import { kbChunks } from "./knowledge.schema";
 
 /**
@@ -22,14 +23,9 @@ import { kbChunks } from "./knowledge.schema";
  * back to a named student.
  */
 
-export const chatRole = pgEnum("chat_role", ["user", "assistant"]);
+export const chatRole = pgEnum("chat_role", CHAT_ROLES);
 
-export const feedbackReason = pgEnum("feedback_reason", [
-  "wrong",
-  "outdated",
-  "unclear",
-  "incomplete",
-]);
+export const feedbackReason = pgEnum("feedback_reason", FEEDBACK_REASONS);
 
 export const chatSessions = pgTable(
   "chat_sessions",
