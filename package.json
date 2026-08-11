@@ -9,7 +9,6 @@
     "lint": "eslint",
     "migrate": "drizzle-kit push",
     "seed": "tsx seed.ts",
-    "seed:mobility": "tsx seed-mobility.ts",
     "release": "commit-and-tag-version"
   },
   "dependencies": {

@@ -12,11 +12,16 @@ import {
   ClipboardList,
   Coins,
   ExternalLink,
+  FileCheck,
   FileStack,
   GraduationCap,
+  HelpCircle,
+  Info,
   Landmark,
   Languages,
+  Receipt,
   School,
+  UserCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -274,10 +279,144 @@ export default function ProgramDetailPage({
         )}
       </section>
 
-      {/* Dynamic Content for Dual Degree Program */}
+      {/* Dynamic Content ONLY for Semester Exchange Program */}
+      {program.type === "exchange" && (
+        <section className="mb-10 space-y-6">
+          <h2 className="text-xl font-bold tracking-tight">
+            📌 {t({ en: "Qualification & Application", zh: "申請資格與規範" })}
+          </h2>
+
+          {/* Qualification Card */}
+          <Card className="overflow-hidden border shadow-sm">
+            <div className="bg-[#1b365d] px-4 py-3 text-white">
+              <h3 className="font-semibold text-base flex items-center gap-2">
+                <UserCheck className="size-4" />
+                {t({ en: "Qualification", zh: "申請資格" })}
+              </h3>
+            </div>
+            <CardContent className="p-4 text-sm leading-relaxed">
+              <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                <li>
+                  {t({
+                    en: "Undergraduate or graduate students (while studying abroad, applicants must not completed the graduation requirements).",
+                    zh: "本校學士班或碩士班在學生（赴外研修期間不得已達畢業標準）。",
+                  })}
+                </li>
+                <li>
+                  {t({
+                    en: "Students are eligible to apply for programs according to the grade of the exchange period.",
+                    zh: "學生得依赴外交換期間之年級別申請相符之計畫。",
+                  })}
+                </li>
+              </ol>
+            </CardContent>
+          </Card>
+
+          {/* Application Period and Fees Card */}
+          <Card className="overflow-hidden border shadow-sm">
+            <div className="bg-[#1b365d] px-4 py-3 text-white">
+              <h3 className="font-semibold text-base flex items-center gap-2">
+                <Receipt className="size-4" />
+                {t({ en: "Application Period and Fees", zh: "申請時間與費用" })}
+              </h3>
+            </div>
+            <CardContent className="p-4 text-sm leading-relaxed space-y-4">
+              <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                <li>{t({ en: "Please fill in the Online application.", zh: "請先填寫線上申請表。" })}</li>
+                <li>
+                  {t({
+                    en: "Document required (mentioned in the selection brochure)",
+                    zh: "備妥所需文件（詳見甄選簡章規定）。",
+                  })}
+                </li>
+                <li>
+                  {t({
+                    en: "Application deadline: The deadline will be posted on the OIEP website.",
+                    zh: "申請截止日期：依國際處網站公告時間為準。",
+                  })}
+                </li>
+                <li>
+                  {t({
+                    en: "Administrative fees: NTD$500 (The fee is non-refundable. Please pay it while handing in the application documents.)",
+                    zh: "行政審查費：新台幣 500 元（費用不予退還，請於繳交紙本申請文件時一併繳納）。",
+                  })}
+                </li>
+              </ol>
+              <div className="rounded-md bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                <strong>NOTE:</strong>{" "}
+                {t({
+                  en: "Only the procedures mention above are completed, the application will be accepted.",
+                  zh: "須完成上述所有程序，申請方視為正式受理。",
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Application Documents Card */}
+          <Card className="overflow-hidden border shadow-sm">
+            <div className="bg-[#1b365d] px-4 py-3 text-white">
+              <h3 className="font-semibold text-base flex items-center gap-2">
+                <FileCheck className="size-4" />
+                {t({ en: "Application Documents", zh: "應繳交文件" })}
+              </h3>
+            </div>
+            <CardContent className="p-4 text-sm leading-relaxed space-y-4">
+              <p className="font-medium text-foreground">
+                {t({
+                  en: "All documents must be put in order (no staple) :",
+                  zh: "所有文件請按順序排列（切勿裝訂或釘裝）：",
+                })}
+              </p>
+              <ol className="list-decimal list-inside space-y-2 text-muted-foreground pl-1">
+                <li>{t({ en: "Student ID", zh: "學生證影本" })}</li>
+                <li>
+                  {t({
+                    en: "Application form (Please complete the Online application then print out and signed)",
+                    zh: "申請表（請完成線上申請後列印並親自簽名）",
+                  })}
+                </li>
+                <li>
+                  {t({
+                    en: "Official academic transcript for all semesters (Please highlight the GPA for each semester)",
+                    zh: "歷年成績單正本（請畫線螢光標示每一學期之 GPA）",
+                  })}
+                </li>
+                <li>
+                  {t({
+                    en: "Verification of class ranking for all semesters (Please highlight the percentage for each semester)",
+                    zh: "歷年名次證明書（請畫線螢光標示每一學期之名次百分比）",
+                  })}
+                </li>
+                <li>{t({ en: "Language proficiency certificate photocopy", zh: "外語能力檢定證明影本" })}</li>
+              </ol>
+
+              <Separator />
+
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p>
+                  **{" "}
+                  {t({
+                    en: "For student who submit the language proficiency certificate must meet the requirement of partner school to apply for the exchange program.",
+                    zh: "學生所檢附之外語檢定證明須符合欲申請之姐妹校規範門檻。",
+                  })}
+                </p>
+                <p>
+                  **{" "}
+                  {t({
+                    en: "Please submit the document in order, OIR office will not provide printing or photocopy service",
+                    zh: "請依序排列文件，國際處辦公室現場不提供影印及列印服務。",
+                  })}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      {/* Dynamic Content ONLY for Dual Degree Program */}
       {program.type === "dualDegree" && (
         <>
-          {/* 3. Application Requirements */}
+          {/* Application Requirements */}
           <section className="mb-10">
             <h2 className="mb-2 text-xl font-bold tracking-tight">
               📋 {t({ en: "Application requirements", zh: "申請資格與要求" })}
@@ -359,7 +498,7 @@ export default function ProgramDetailPage({
             </div>
           </section>
 
-          {/* 4. Application Process */}
+          {/* Application Process */}
           <section className="mb-10">
             <h2 className="mb-2 text-xl font-bold tracking-tight">
               🧭 {t({ en: "Application process", zh: "申請流程" })}
@@ -389,7 +528,7 @@ export default function ProgramDetailPage({
             </div>
           </section>
 
-          {/* 5. Tuition and Subsidy Information */}
+          {/* Tuition and Subsidy Information */}
           <section className="mb-10">
             <h2 className="mb-4 text-xl font-bold tracking-tight">
               💰 {t({ en: "Tuition and subsidy information", zh: "學費與補助資訊" })}
