@@ -16,34 +16,90 @@ A platform for Tunghai University's Office of International Relations. It centra
 
 ## Getting started
 
+Infrastructure first — PostgreSQL, MinIO, Qdrant, and Ollama all run from the
+[containers](https://github.com/David930426/containers) repo:
+
+```bash
+git clone https://github.com/David930426/containers.git
+cd containers
+docker compose up -d
+```
+
+Then the app:
+
 ```bash
 pnpm install
 npx simple-git-hooks       # enables commit-msg linting (Conventional Commits)
-cp .env.example .env       # then fill in the values
+cp .env.example .env       # then fill in the values — see below
+pnpm migrate               # create the tables
+pnpm seed                  # create the first admin account
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) and sign in with the account
+`pnpm seed` prints (`admin@thu.edu.tw` / `admin123` by default).
 
-> Screens that are already wired to the database (users, categories & tags, the media
-> library) need PostgreSQL and MinIO running. The rest still renders from static mock
-> data in [`lib/mock`](lib/mock).
+### Filling in `.env`
+
+The defaults in `.env.example` do **not** match the containers repo. These four
+need changing or nothing works:
+
+| Variable | Use this | Why |
+|---|---|---|
+| `DATABASE_URL` | `postgresql://admin:admin123@localhost:5432/admin` | The example uses `postgres:postgres@.../oir_hub`; the container ships `admin`/`admin123` and names the database after the user. |
+| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | `admin` / `admin123` | The example uses `minioadmin`; uploads fail with `InvalidAccessKeyId` against the container. |
+| `QDRANT_API_KEY` | any string, e.g. `devkey123` | See below — leaving it empty gives `Qdrant responded 401`. |
+| `CHAT_MODEL` | `qwen2.5:3b` | The example points at `qwen2.5:7b` (~4.7 GB). The 3b variant is enough for local work; pull whichever you set. |
+
+Generate `BETTER_AUTH_SECRET` with `npx @better-auth/cli secret`.
+
+### Qdrant returns 401
+
+Compose passes `QDRANT__SERVICE__API_KEY` through even when it is unset, so Qdrant
+starts with authentication **on** and an empty key — every request is rejected.
+Set the same value on both sides: `QDRANT_API_KEY=devkey123` in the containers
+`.env`, recreate the container, then the same value in this repo's `.env`.
+
+On Windows, create that file in an editor rather than with `echo >`: PowerShell
+writes UTF-16 and Docker refuses to parse it.
+
+### Ollama models
+
+Pull both into the running container before indexing anything:
+
+```bash
+docker exec -it ollama ollama pull bge-m3       # embeddings, ~1.2 GB
+docker exec -it ollama ollama pull qwen2.5:3b   # chat, ~2 GB
+```
+
+### Before the knowledge base has anything in it
+
+`pnpm seed` only creates the admin account, so the content tables start empty and
+the pickers on the create forms have nothing to offer. To get one document indexed
+end to end:
+
+1. `/admin/taxonomy` → create a category. Categories are scoped by kind — a
+   `Post` category never appears in the FAQ picker, so pick **FAQ**.
+2. `/admin/faqs` → create an FAQ. Both answer fields are required, and it needs at
+   least one source (a label plus either an uploaded file or a URL).
+3. Publish it — the knowledge index only reads published content.
+4. `/admin/knowledge` → **Sync from content**, then **Re-index**. Sync is free;
+   re-indexing embeds through Ollama and writes to Qdrant, so both must be running.
+
+Uploads (`/admin/media/upload`) need the `oir` bucket to exist — create it in the
+MinIO console at [http://localhost:9001](http://localhost:9001) first.
+
+> Screens already wired to the database (users, categories & tags, the media
+> library, FAQs, the knowledge index) need the containers running. `/chat` still
+> renders from static mock data in [`lib/mock`](lib/mock).
 
 ## File storage (MinIO)
 
 Uploads in the media library go to a MinIO bucket; only the object name is kept in
-PostgreSQL. Run it with Docker:
+PostgreSQL. MinIO runs as part of the [containers](https://github.com/David930426/containers)
+repo — no separate `docker run` needed.
 
-```bash
-docker run -d --name oir-minio \
-  -p 9000:9000 -p 9001:9001 \
-  -e MINIO_ROOT_USER=admin \
-  -e MINIO_ROOT_PASSWORD=admin123 \
-  -v oir-minio:/data \
-  minio/minio server /data --console-address ":9001"
-```
-
-Then open the console at [http://localhost:9001](http://localhost:9001), sign in with
+Open the console at [http://localhost:9001](http://localhost:9001), sign in with
 those credentials, and create a bucket named **`oir`** — or whatever you set
 `MINIO_BUCKET` to. Keep the bucket private: the console never links to it directly.
 `GET /api/media/[id]` checks the session and answers with a short-lived presigned URL,
