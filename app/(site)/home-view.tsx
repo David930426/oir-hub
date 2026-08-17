@@ -13,6 +13,7 @@ import {
   Landmark,
   Quote,
   School,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +39,7 @@ import type { SiteBulletin } from "./bulletins/bulletins-view";
 import type { SitePost } from "./news/news-view";
 import type { SiteTestimonial } from "./testimonials/testimonials-view";
 
-/** One hand-entered homepage figure. */
+/** One hand-entered homepage figure, from SITE_STATS. */
 export type SiteStat = {
   id: string;
   metricKey: string;
@@ -46,10 +47,35 @@ export type SiteStat = {
   value: number;
 };
 
+/**
+ * Figures counted off the records, worked out by the server component.
+ *
+ * These are what the office can prove: how many agreements are signed, how many
+ * places exist, what closes next. Anything the database cannot know — students
+ * who actually went, money actually awarded — comes from SITE_STATS instead.
+ */
+export type SiteFigures = {
+  programs: number;
+  partnerSchools: number;
+  countries: number;
+  quotaPerTerm: number;
+  openCalls: number;
+  openFunding: number;
+  testimonials: number;
+  topFundingAmount: number;
+  nextDeadline: {
+    id: string;
+    title: Localized;
+    deadlineAt: string;
+    daysLeft: number;
+  } | null;
+};
+
 const programIcons = [School, BookOpenCheck, CalendarDays, Landmark, Quote];
 
 export function HomeView({
   stats,
+  figures,
   calls,
   latestPosts,
   openFunding,
@@ -58,6 +84,7 @@ export function HomeView({
   slotCount,
 }: {
   stats: SiteStat[];
+  figures: SiteFigures;
   calls: (SiteBulletin & { programName: Localized | null })[];
   latestPosts: SitePost[];
   openFunding: SiteFunding[];
@@ -66,6 +93,104 @@ export function HomeView({
   slotCount: number;
 }) {
   const { t } = useLocale();
+
+  /**
+   * The figures band.
+   *
+   * Counted values come first because they are always true; the hand-entered
+   * SITE_STATS rows fill the remaining places, so a year the office has not
+   * filled in yet simply shows fewer tiles rather than an empty strip. A tile
+   * whose number is zero is dropped — "0 partner schools" is worse for trust
+   * than saying nothing.
+   */
+  const tiles: {
+    label: string;
+    value: string;
+    sub?: string;
+    icon: typeof School;
+  }[] = [
+    {
+      label: "Partner schools",
+      value: String(figures.partnerSchools),
+      sub:
+        figures.countries > 0
+          ? `across ${figures.countries} ${figures.countries === 1 ? "country" : "countries"}`
+          : undefined,
+      icon: School,
+    },
+    {
+      label: "Places each term",
+      value: String(figures.quotaPerTerm),
+      sub: `over ${figures.programs} ${figures.programs === 1 ? "program" : "programs"}`,
+      icon: Users,
+    },
+    {
+      label: figures.openCalls === 1 ? "Call open now" : "Calls open now",
+      value: String(figures.openCalls),
+      sub: figures.nextDeadline
+        ? `next closes ${figures.nextDeadline.deadlineAt}`
+        : undefined,
+      icon: FileStack,
+    },
+    {
+      label: "Funding you can apply for",
+      value: String(figures.openFunding),
+      sub:
+        figures.topFundingAmount > 0
+          ? `up to ${formatTwd(figures.topFundingAmount)}`
+          : undefined,
+      icon: Coins,
+    },
+    {
+      label: "Student reports",
+      value: String(figures.testimonials),
+      sub: "written after they came back",
+      icon: Quote,
+    },
+  ]
+    .filter((tile) => tile.value !== "0")
+    .slice(0, 4);
+
+  for (const stat of stats) {
+    if (tiles.length >= 4) break;
+    tiles.push({
+      label: t(stat.label),
+      value:
+        stat.metricKey === "funding_total"
+          ? formatTwd(stat.value)
+          : stat.value.toLocaleString("en-US"),
+      sub: "recorded by the office",
+      icon: Landmark,
+    });
+  }
+
+  /** The three questions students actually arrive with. */
+  const paths = [
+    {
+      href: "/programs",
+      icon: School,
+      title: "I want to study abroad",
+      description:
+        "Compare exchange, dual degree, internships and language study — what each one asks of you, and which schools take part.",
+      action: "Browse programs",
+    },
+    {
+      href: "/bulletins",
+      icon: CalendarClock,
+      title: "I need to know the deadline",
+      description:
+        "Every selection call the office has issued, with the binding PDF and how long is left to apply.",
+      action: "See open calls",
+    },
+    {
+      href: "/funding",
+      icon: Coins,
+      title: "I need to pay for it",
+      description:
+        "Ministry, university and external awards, with who qualifies and which months they open in.",
+      action: "Find funding",
+    },
+  ] as const;
 
   return (
     <>
@@ -118,22 +243,86 @@ export function HomeView({
                 </Link>
               </Button>
             </div>
+
+            {/* The one thing a student on this page has to act on. */}
+            {figures.nextDeadline && figures.nextDeadline.daysLeft >= 0 && (
+              <Link
+                href={`/bulletins/${figures.nextDeadline.id}`}
+                className="group mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-white/25 bg-white/10 px-4 py-3 backdrop-blur transition-colors hover:bg-white/15"
+              >
+                <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-white/70">
+                  <CalendarClock className="size-3.5" />
+                  Closing next
+                </span>
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                  {t(figures.nextDeadline.title)}
+                </span>
+                <span className="rounded-full bg-white px-2.5 py-0.5 text-xs font-bold tabular-nums text-[#1E3A4C]">
+                  {figures.nextDeadline.daysLeft === 0
+                    ? "closes today"
+                    : figures.nextDeadline.daysLeft === 1
+                      ? "1 day left"
+                      : `${figures.nextDeadline.daysLeft} days left`}
+                </span>
+                <ArrowRight className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Site stats — SITE_STATS rows for the current academic year */}
-      <section className="border-b bg-muted/40">
-        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((s) => (
-            <div key={s.id}>
-              <p className="text-3xl font-bold tracking-tight tabular-nums text-primary">
-                {s.metricKey === "funding_total"
-                  ? formatTwd(s.value)
-                  : s.value.toLocaleString("en-US")}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">{t(s.label)}</p>
-            </div>
+      {/* What the office can prove, counted off the records */}
+      {tiles.length >= 2 && (
+        <section className="border-b bg-muted/40">
+          <div className="mx-auto max-w-6xl px-4 py-10">
+            <dl className="grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+              {tiles.map((tile) => (
+                <div key={tile.label} className="flex items-start gap-3">
+                  <span className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <tile.icon className="size-4.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <dd className="text-3xl font-bold leading-none tracking-tight tabular-nums text-primary">
+                      {tile.value}
+                    </dd>
+                    <dt className="mt-1.5 text-sm font-medium">{tile.label}</dt>
+                    {tile.sub && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {tile.sub}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
+      )}
+
+      {/* Guided entry — most visitors arrive knowing their question, not our
+          menu structure, so the three usual questions get their own doors. */}
+      <section className="mx-auto max-w-6xl px-4 pt-16">
+        <div className="grid gap-4 md:grid-cols-3">
+          {paths.map((path) => (
+            <Link key={path.href} href={path.href} className="group">
+              <Card className="h-full transition-all group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-md">
+                <CardHeader>
+                  <span className="mb-1 flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <path.icon className="size-5" />
+                  </span>
+                  <CardTitle className="text-base group-hover:text-primary">
+                    {path.title}
+                  </CardTitle>
+                  <CardDescription className="leading-relaxed">
+                    {path.description}
+                  </CardDescription>
+                  <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary">
+                    {path.action}
+                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </CardHeader>
+              </Card>
+            </Link>
           ))}
         </div>
       </section>
@@ -146,8 +335,9 @@ export function HomeView({
               Ways to go abroad
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Five program types, each with its own bulletins, partner schools,
-              and funding.
+              {programs.length === 1
+                ? "One program, with its own bulletins, partner schools and funding."
+                : `${programs.length} program types, each with its own bulletins, partner schools and funding.`}
             </p>
           </div>
           <Button asChild variant="ghost" className="hidden sm:inline-flex">
