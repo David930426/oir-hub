@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Check,
   Loader2,
   Mail,
-  MessageSquare,
   MoreHorizontal,
   Trash2,
   Undo2,
@@ -106,14 +104,6 @@ export function ContactRowActions({
               Reply by email
             </a>
           </DropdownMenuItem>
-          {message.fromSessionId && (
-            <DropdownMenuItem asChild>
-              <Link href={`/admin/conversations/${message.fromSessionId}`}>
-                <MessageSquare className="size-4" />
-                Read the transcript
-              </Link>
-            </DropdownMenuItem>
-          )}
           <DropdownMenuItem onSelect={toggleResolved} disabled={pending}>
             {message.resolved ? (
               <Undo2 className="size-4" />

@@ -1,7 +1,6 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import { ContactRowActions } from "./contact-row-actions";
@@ -56,22 +55,6 @@ export function contactColumns(
           {row.original.topic}
         </Badge>
       ),
-    },
-    {
-      id: "origin",
-      header: "From",
-      enableGlobalFilter: false,
-      cell: ({ row }) =>
-        row.original.fromSessionId ? (
-          // Escalated questions carry the transcript that led to them, which is
-          // usually the fastest way to understand what is being asked.
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <MessageSquare className="size-3" />
-            Assistant
-          </span>
-        ) : (
-          <span className="text-xs text-muted-foreground">Contact form</span>
-        ),
     },
     {
       accessorKey: "resolved",

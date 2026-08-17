@@ -201,7 +201,7 @@ export function FaqForm({
               label="簡答"
               required
               rows={3}
-              description="One or two sentences — what the site and the assistant quote first."
+              description="One or two sentences — what the site shows before the reader expands the answer."
             />
             <TextAreaField
               control={control}
@@ -291,14 +291,14 @@ export function FaqForm({
           <SwitchField
             control={control}
             name="needsHumanConfirm"
-            label="The assistant must escalate this"
-            description="For high-risk answers — visas, insurance, anything with legal weight."
+            label="Readers must confirm this with staff"
+            description="For high-risk answers — visas, insurance, anything with legal weight. The page says so beside the answer."
           />
           <SwitchField
             control={control}
             name="published"
             label="Published"
-            description="Publishing puts it on the site and queues it for the assistant's index."
+            description="Publishing puts it on the public FAQ page."
           />
         </CardContent>
       </Card>

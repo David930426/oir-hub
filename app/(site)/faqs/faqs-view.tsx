@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Bot,
   ExternalLink,
   FileText,
+  Mail,
   Search,
   ShieldCheck,
   Users,
@@ -236,13 +236,13 @@ export function FaqsView({
       <Card className="mt-6 border-primary/20 bg-primary/3">
         <CardContent className="flex flex-wrap items-center justify-between gap-4 py-2">
           <p className="text-sm text-muted-foreground">
-            Not answered here? The assistant searches the same sources, plus
-            every bulletin and testimonial.
+            Not answered here? Send the office your question and the staff member
+            in charge of that topic will reply.
           </p>
           <Button asChild size="sm">
-            <Link href="/chat">
-              <Bot className="size-4" />
-              Ask the assistant
+            <Link href="/contact">
+              <Mail className="size-4" />
+              Ask the office
             </Link>
           </Button>
         </CardContent>

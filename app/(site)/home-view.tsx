@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   BookOpenCheck,
-  Bot,
+  CircleHelp,
   CalendarClock,
   CalendarDays,
   Coins,
@@ -112,9 +112,9 @@ export function HomeView({
                 variant="outline"
                 className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
               >
-                <Link href="/chat">
-                  <Bot className="size-4" />
-                  Ask the AI Assistant
+                <Link href="/faqs">
+                  <CircleHelp className="size-4" />
+                  Read the FAQ
                 </Link>
               </Button>
             </div>

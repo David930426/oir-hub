@@ -2,13 +2,15 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
-  BookOpenCheck,
+  CalendarClock,
+  CircleHelp,
   FileStack,
   Inbox,
-  MessagesSquare,
-  ShieldCheck,
-  ThumbsUp,
+  Quote,
+  ShieldQuestion,
 } from "lucide-react";
+import { PageHeader } from "@/components/admin/page-header";
+import { DeadlineBadge } from "@/components/shared/enum-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +20,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -27,109 +28,51 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PageHeader } from "@/components/admin/page-header";
-import {
-  DeadlineBadge,
-  RatingBadge,
-  ToneDot,
-} from "@/components/shared/enum-badge";
-import {
-  chatFeedback,
-  chatSessions,
-  chatsPerDay,
-  formatTerm,
-  kbStatusMeta,
-  messagesForSession,
-  sessionEscalated,
-  sessionRating,
-} from "@/lib/mock";
+import { REVIEW_INTERVAL_DAYS } from "@/constant";
 import { listOpenBulletins } from "@/lib/repositories/bulletin.repository";
 import { listContactMessages } from "@/lib/repositories/contact.repository";
 import { listFaqs } from "@/lib/repositories/faq.repository";
-import {
-  listKbDocuments,
-  type KbStatusValue,
-} from "@/lib/repositories/knowledge.repository";
+import { listPosts } from "@/lib/repositories/post.repository";
 import { listTestimonials } from "@/lib/repositories/testimonial.repository";
-import { formatDay, isOlderThan } from "@/lib/utils";
-import { REVIEW_INTERVAL_DAYS } from "@/constant";
+import { formatTerm } from "@/lib/mock/labels";
+import { formatDay, isOlderThan, pluralize } from "@/lib/utils";
 
 /**
- * The console's landing screen.
+ * The console's landing screen: what is live, and what is waiting on a person.
  *
- * Content figures come from the database; the assistant's numbers are still the
- * design-stage fixtures, because the chat itself has not been wired up yet.
+ * Everything here is a count the office can act on — a deadline about to pass,
+ * a message nobody has answered, an answer nobody has re-read this year. There
+ * is deliberately no vanity metric.
  */
 export default async function AdminDashboardPage() {
-  const [kbDocuments, contactMessages, bulletins, testimonials, faqs] =
-    await Promise.all([
-      listKbDocuments(),
-      listContactMessages(),
-      listOpenBulletins(),
-      listTestimonials(),
-      listFaqs(),
-    ]);
+  const [bulletins, messages, faqs, testimonials, posts] = await Promise.all([
+    listOpenBulletins(),
+    listContactMessages(),
+    listFaqs(),
+    listTestimonials(),
+    listPosts(),
+  ]);
 
-  const maxChats = Math.max(...chatsPerDay.map((d) => d.count));
-  const todayChats = chatsPerDay[chatsPerDay.length - 1];
-  const previousChats = chatsPerDay[chatsPerDay.length - 2];
-  const chatDelta = Math.round(
-    ((todayChats.count - previousChats.count) / previousChats.count) * 100
-  );
-
-  const good = chatFeedback.filter((f) => f.rating === 1).length;
-  const goodRatio = chatFeedback.length
-    ? Math.round((good / chatFeedback.length) * 100)
-    : 0;
-
-  const kbCounts = kbDocuments.reduce(
-    (acc, doc) => {
-      acc[doc.status] += 1;
-      return acc;
-    },
-    { indexed: 0, pending: 0, stale: 0, failed: 0 } as Record<
-      KbStatusValue,
-      number
-    >
-  );
-
-  const unresolved = contactMessages.filter((m) => !m.resolved);
-  const calls = bulletins;
+  const unresolved = messages.filter((message) => !message.resolved);
 
   // Work queues — the rows that need a human before the site is correct.
   const awaitingConsent = testimonials.filter(
-    (t) => !t.consentGiven && t.status !== "archived"
+    (testimonial) => !testimonial.consentGiven && testimonial.status !== "archived",
   );
-  const staleFaqs = faqs.filter((f) =>
-    isOlderThan(f.lastReviewedAt, REVIEW_INTERVAL_DAYS)
+  const staleFaqs = faqs.filter((faq) =>
+    isOlderThan(faq.lastReviewedAt, REVIEW_INTERVAL_DAYS),
   );
-  const failedDocs = kbDocuments.filter((d) => d.status === "failed");
-
-  const recentSessions = [...chatSessions]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 5);
+  const drafts = posts.filter((post) => post.status === "draft");
 
   const stats = [
     {
-      label: "Chats today",
-      value: String(todayChats.count),
-      sub: `${chatDelta >= 0 ? "+" : ""}${chatDelta}% vs yesterday`,
-      icon: MessagesSquare,
-      href: "/admin/conversations",
-    },
-    {
-      label: "Good rating ratio",
-      value: `${goodRatio}%`,
-      sub: `${chatFeedback.length} rated answers`,
-      icon: ThumbsUp,
-      href: "/admin/feedback",
-    },
-    {
-      label: "Documents indexed",
-      value: `${kbCounts.indexed} / ${kbDocuments.length}`,
-      sub: `${kbCounts.pending} pending · ${kbCounts.stale} stale · ${kbCounts.failed} failed`,
-      icon: BookOpenCheck,
-      href: "/admin/knowledge",
+      label: "Open bulletins",
+      value: String(bulletins.length),
+      sub: bulletins.length
+        ? `next closes ${bulletins[0].deadlineAt}`
+        : "nothing accepting applications",
+      icon: FileStack,
+      href: "/admin/bulletins" as const,
     },
     {
       label: "Unresolved contacts",
@@ -138,30 +81,64 @@ export default async function AdminDashboardPage() {
         ? `oldest from ${formatDay(unresolved[unresolved.length - 1].createdAt)}`
         : "inbox is clear",
       icon: Inbox,
-      href: "/admin/contact",
+      href: "/admin/contact" as const,
+    },
+    {
+      label: "Published FAQs",
+      value: String(faqs.filter((faq) => faq.published).length),
+      sub: staleFaqs.length
+        ? `${staleFaqs.length} overdue for review`
+        : "all reviewed recently",
+      icon: CircleHelp,
+      href: "/admin/faqs" as const,
+    },
+    {
+      label: "Draft posts",
+      value: String(drafts.length),
+      sub: drafts.length ? "not visible on the site" : "nothing waiting",
+      icon: CalendarClock,
+      href: "/admin/posts" as const,
     },
   ];
+
+  const queues = [
+    {
+      count: awaitingConsent.length,
+      label: `${pluralize(awaitingConsent.length, "testimonial")} waiting on consent`,
+      href: "/admin/testimonials" as const,
+      icon: ShieldQuestion,
+    },
+    {
+      count: staleFaqs.length,
+      label: `${pluralize(staleFaqs.length, "answer")} not reviewed in ${REVIEW_INTERVAL_DAYS} days`,
+      href: "/admin/faqs" as const,
+      icon: CircleHelp,
+    },
+    {
+      count: unresolved.length,
+      label: `${pluralize(unresolved.length, "message")} waiting for a reply`,
+      href: "/admin/contact" as const,
+      icon: Inbox,
+    },
+  ].filter((queue) => queue.count > 0);
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <PageHeader
         title="Dashboard"
-        description="Assistant activity, knowledge base health, and everything waiting on a person."
+        description="What is live on the site, and everything waiting on a person."
       />
 
-      {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Link key={stat.label} href={stat.href} className="group">
             <Card className="h-full transition-all group-hover:border-primary/40 group-hover:shadow-sm">
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <CardDescription>{stat.label}</CardDescription>
                   <stat.icon className="size-4 text-muted-foreground" />
                 </div>
-                <CardTitle className="text-3xl tabular-nums">
-                  {stat.value}
-                </CardTitle>
+                <CardTitle className="text-3xl tabular-nums">{stat.value}</CardTitle>
                 <p className="text-xs text-muted-foreground">{stat.sub}</p>
               </CardHeader>
             </Card>
@@ -169,271 +146,180 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* Needs attention */}
-      {(failedDocs.length > 0 ||
-        awaitingConsent.length > 0 ||
-        staleFaqs.length > 0) && (
+      {queues.length > 0 && (
         <Card className="border-amber-200 bg-amber-50/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <AlertTriangle className="size-4 text-amber-600" />
-              Needs attention
+              <AlertTriangle className="size-4 text-amber-700" />
+              Waiting on a person
             </CardTitle>
             <CardDescription>
-              Content that is wrong, invisible, or unpublishable until someone
-              acts.
+              None of these fix themselves — each one needs a staff member to
+              look at it.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-3">
-            {failedDocs.length > 0 && (
-              <Link href="/admin/knowledge" className="group">
-                <div className="rounded-lg border bg-background p-3 transition-colors group-hover:border-primary/40">
-                  <p className="text-2xl font-bold tabular-nums text-red-700">
-                    {failedDocs.length}
-                  </p>
-                  <p className="text-sm font-medium">Documents failed to index</p>
-                  <p className="text-xs text-muted-foreground">
-                    Invisible to the assistant until retried.
-                  </p>
-                </div>
+          <CardContent className="space-y-2">
+            {queues.map((queue) => (
+              <Link
+                key={queue.label}
+                href={queue.href}
+                className="flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2 transition-colors hover:border-primary/40"
+              >
+                <span className="flex items-center gap-2 text-sm">
+                  <queue.icon className="size-4 text-muted-foreground" />
+                  {queue.label}
+                </span>
+                <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
               </Link>
-            )}
-            {awaitingConsent.length > 0 && (
-              <Link href="/admin/testimonials" className="group">
-                <div className="rounded-lg border bg-background p-3 transition-colors group-hover:border-primary/40">
-                  <p className="text-2xl font-bold tabular-nums text-amber-700">
-                    {awaitingConsent.length}
-                  </p>
-                  <p className="text-sm font-medium">Testimonials need consent</p>
-                  <p className="text-xs text-muted-foreground">
-                    Cannot be published until the student agrees.
-                  </p>
-                </div>
-              </Link>
-            )}
-            {staleFaqs.length > 0 && (
-              <Link href="/admin/faqs" className="group">
-                <div className="rounded-lg border bg-background p-3 transition-colors group-hover:border-primary/40">
-                  <p className="text-2xl font-bold tabular-nums text-amber-700">
-                    {staleFaqs.length}
-                  </p>
-                  <p className="text-sm font-medium">FAQs due for review</p>
-                  <p className="text-xs text-muted-foreground">
-                    Not checked in the last 6 months.
-                  </p>
-                </div>
-              </Link>
-            )}
+            ))}
           </CardContent>
         </Card>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        {/* Chats per day */}
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle className="text-base">Chats per day</CardTitle>
-            <CardDescription>Last 7 days</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex h-44 items-end gap-3">
-              {chatsPerDay.map((day) => (
-                <div
-                  key={day.day}
-                  className="flex flex-1 flex-col items-center gap-2"
-                >
-                  <span className="text-xs font-medium tabular-nums">
-                    {day.count}
-                  </span>
-                  <div
-                    className="w-full rounded-t-md bg-primary/85 transition-colors hover:bg-primary"
-                    style={{ height: `${(day.count / maxChats) * 100}%` }}
-                  />
-                  <span className="text-[11px] text-muted-foreground">
-                    {day.day}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Knowledge index status */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">Knowledge index</CardTitle>
-            <CardDescription>
-              {kbDocuments.length} documents derived from your content
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {(Object.keys(kbStatusMeta) as KbStatusValue[]).map((status) => (
-              <div key={status} className="space-y-1.5">
-                <div className="flex items-center justify-between text-sm">
-                  <ToneDot
-                    tone={kbStatusMeta[status].tone}
-                    label={kbStatusMeta[status].label}
-                  />
-                  <span className="tabular-nums text-muted-foreground">
-                    {kbCounts[status]}
-                  </span>
-                </div>
-                <Progress
-                  value={(kbCounts[status] / kbDocuments.length) * 100}
-                />
-              </div>
-            ))}
-            <Button asChild variant="outline" size="sm" className="w-full">
-              <Link href="/admin/knowledge">
-                Open the index
-                <ArrowRight className="size-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Open bulletins */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <FileStack className="size-4 text-primary" />
-                Open calls
-              </CardTitle>
-              <CardDescription>
-                Bulletins accepting applications, nearest deadline first
-              </CardDescription>
-            </div>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/admin/bulletins">
-                Manage
-                <ArrowRight className="size-4" />
-              </Link>
-            </Button>
+      <section className="space-y-3">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-base font-semibold">Closing soonest</h2>
+            <p className="text-sm text-muted-foreground">
+              Open calls, by the date students have to submit by.
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Bulletin</TableHead>
-                <TableHead>Program</TableHead>
-                <TableHead>Term</TableHead>
-                <TableHead>Deadline</TableHead>
-                <TableHead className="text-right">Time left</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {calls.map((bulletin) => {
-                const program = bulletin.program;
-                return (
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/admin/bulletins">
+              All bulletins
+              <ArrowRight className="size-4" />
+            </Link>
+          </Button>
+        </div>
+
+        <Card className="py-0">
+          <CardContent className="px-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-6">Bulletin</TableHead>
+                  <TableHead>Program</TableHead>
+                  <TableHead>Term</TableHead>
+                  <TableHead>Deadline</TableHead>
+                  <TableHead className="pr-6">Time left</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bulletins.slice(0, 5).map((bulletin) => (
                   <TableRow key={bulletin.id}>
-                    <TableCell className="max-w-72">
+                    <TableCell className="pl-6">
                       <Link
-                        href={`/bulletins/${bulletin.id}`}
-                        className="block truncate font-medium hover:text-primary"
+                        href={`/admin/bulletins/${bulletin.id}/edit`}
+                        className="font-medium hover:text-primary"
                       >
                         {bulletin.titleZh}
                       </Link>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {program ? program.nameEn ?? program.nameZh : "—"}
+                      {bulletin.program?.nameZh ?? "—"}
                     </TableCell>
                     <TableCell>
                       <span className="rounded bg-accent px-2 py-0.5 font-mono text-xs text-accent-foreground">
                         {formatTerm(bulletin.academicYear, bulletin.term)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-sm tabular-nums text-muted-foreground">
                       {bulletin.deadlineAt}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="pr-6">
                       <DeadlineBadge date={bulletin.deadlineAt} />
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                ))}
+              </TableBody>
+            </Table>
+            {bulletins.length === 0 && (
+              <p className="py-12 text-center text-sm text-muted-foreground">
+                No call is open. Create one when the next round is announced.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </section>
 
-      {/* Recent conversations */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <CardTitle className="text-base">Recent conversations</CardTitle>
-              <CardDescription>Latest anonymous chat sessions</CardDescription>
-            </div>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/admin/conversations">
-                View all
-                <ArrowRight className="size-4" />
+      <section className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Quote className="size-4 text-primary" />
+              Latest testimonials
+            </CardTitle>
+            <CardDescription>
+              Reports collected after each term, newest first.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {testimonials.slice(0, 4).map((testimonial) => (
+              <Link
+                key={testimonial.id}
+                href={`/admin/testimonials/${testimonial.id}/edit`}
+                className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-colors hover:border-primary/40"
+              >
+                <span className="min-w-0 truncate">
+                  {testimonial.displayName}
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {testimonial.schoolName ?? testimonial.country}
+                  </span>
+                </span>
+                {!testimonial.consentGiven && (
+                  <Badge
+                    variant="outline"
+                    className="shrink-0 border-amber-200 bg-amber-100 text-[10px] font-medium text-amber-800"
+                  >
+                    No consent
+                  </Badge>
+                )}
               </Link>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Last question</TableHead>
-                <TableHead>Locale</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Flags</TableHead>
-                <TableHead className="text-right">Started</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentSessions.map((session) => {
-                const messages = messagesForSession(session.id);
-                const lastUserMessage = [...messages]
-                  .reverse()
-                  .find((m) => m.role === "user");
-                return (
-                  <TableRow key={session.id}>
-                    <TableCell className="max-w-72">
-                      <Link
-                        href={`/admin/conversations/${session.id}`}
-                        className="block truncate font-medium hover:text-primary"
-                      >
-                        {lastUserMessage?.content ?? "—"}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="font-mono text-[10px]">
-                        {session.locale}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <RatingBadge rating={sessionRating(session.id)} />
-                    </TableCell>
-                    <TableCell>
-                      {sessionEscalated(session.id) ? (
-                        <Badge
-                          variant="outline"
-                          className="gap-1 border-amber-200 bg-amber-100 px-1.5 text-[10px] font-medium text-amber-800"
-                        >
-                          <ShieldCheck className="size-3" />
-                          Escalated
-                        </Badge>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right text-sm text-muted-foreground">
-                      {session.createdAt}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            ))}
+            {testimonials.length === 0 && (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No testimonials collected yet.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Inbox className="size-4 text-primary" />
+              Newest messages
+            </CardTitle>
+            <CardDescription>
+              What students and parents have asked the office.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {messages.slice(0, 4).map((message) => (
+              <Link
+                key={message.id}
+                href="/admin/contact"
+                className="block rounded-lg border px-3 py-2 transition-colors hover:border-primary/40"
+              >
+                <p className="flex items-center justify-between gap-2 text-sm font-medium">
+                  <span className="truncate">{message.name}</span>
+                  <span className="shrink-0 text-xs font-normal text-muted-foreground">
+                    {formatDay(message.createdAt)}
+                  </span>
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {message.topic} · {message.body}
+                </p>
+              </Link>
+            ))}
+            {messages.length === 0 && (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                Nothing in the inbox.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 }

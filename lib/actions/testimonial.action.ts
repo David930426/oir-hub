@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { requireWriter } from "@/dal";
 import { GENERIC_ACTION_ERROR } from "@/constant";
 import { logger } from "@/lib/logger";
-import { markKbDocumentStale } from "@/lib/repositories/knowledge.repository";
 import { findPartnerSchoolById } from "@/lib/repositories/school.repository";
 import {
   createTestimonial,
@@ -119,7 +118,6 @@ export async function updateTestimonialAction(
     }
 
     await updateTestimonial({ id: parsed.data.id, ...row });
-    await markKbDocumentStale("testimonial", parsed.data.id);
 
     revalidateTestimonial(parsed.data.id);
     revalidatePath(`${TESTIMONIALS_PATH}/${parsed.data.id}/edit`);
@@ -153,7 +151,6 @@ export async function setTestimonialStatusAction(
     if (status === "published" && !testimonial.consentGiven) return fail(NEEDS_CONSENT);
 
     await setTestimonialStatus(id, status);
-    await markKbDocumentStale("testimonial", id);
 
     revalidateTestimonial(id);
     return ok(
@@ -178,7 +175,6 @@ export async function deleteTestimonialAction(id: string): Promise<ActionResult>
     if (!testimonial) return fail(MISSING);
 
     await deleteTestimonial(id);
-    await markKbDocumentStale("testimonial", id);
 
     revalidateTestimonial();
     return ok(`${testimonial.displayName}'s report deleted.`);

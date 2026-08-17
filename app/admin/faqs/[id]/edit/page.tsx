@@ -37,7 +37,7 @@ export default async function AdminEditFaqPage({
         </Button>
         <PageHeader
           title={faq.questionZh}
-          description={`Last reviewed ${formatDay(faq.lastReviewedAt)}. Saving records you as the reviewer and flags the assistant's copy stale.`}
+          description={`Last reviewed ${formatDay(faq.lastReviewedAt)}. Saving records you as the reviewer.`}
         />
       </div>
 

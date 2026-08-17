@@ -139,8 +139,7 @@ export function FaqRowActions({ faq }: { faq: FaqRow }) {
           <DialogHeader>
             <DialogTitle>Delete FAQ</DialogTitle>
             <DialogDescription>
-              “{faq.questionZh}” and its sources will be removed. The assistant
-              drops it from the index at the next sync.
+              “{faq.questionZh}” and its sources will be removed from the site.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

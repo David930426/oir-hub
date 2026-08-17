@@ -37,7 +37,7 @@ export default async function AdminEditPostPage({
         </Button>
         <PageHeader
           title={post.titleZh}
-          description="Saving flags the assistant's copy of this post stale, so re-index once the wording is final."
+          description="Changes are live on the public news page as soon as they are saved."
         />
       </div>
 

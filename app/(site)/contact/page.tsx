@@ -44,9 +44,8 @@ export default function ContactPage() {
           >
             FAQ
           </Link>{" "}
-          or the assistant? Send your question here and the staff member in
-          charge of that topic will reply within 3 working days. Questions the
-          assistant escalates arrive in the same inbox.
+          ? Send your question here and the staff member in charge of that
+          topic will reply within 3 working days.
         </p>
       </div>
 

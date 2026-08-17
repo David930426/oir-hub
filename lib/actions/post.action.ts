@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { requireWriter } from "@/dal";
 import { GENERIC_ACTION_ERROR } from "@/constant";
 import { logger } from "@/lib/logger";
-import { markKbDocumentStale } from "@/lib/repositories/knowledge.repository";
 import {
   createPost,
   deletePost,
@@ -36,9 +35,7 @@ import {
  * Posts — news, notices, guides and static pages.
  *
  * Every action re-checks `requireWriter()`: the layout guards the screen, but
- * an action is its own entry point. Publishing also flags the post's knowledge
- * base document stale, because the assistant would otherwise keep quoting the
- * wording that was indexed yesterday.
+ * an action is its own entry point.
  */
 
 const POSTS_PATH = "/admin/posts";
@@ -141,9 +138,6 @@ export async function updatePostAction(
       ),
     });
 
-    // The indexed copy now holds the old wording.
-    await markKbDocumentStale("post", parsed.data.id);
-
     revalidatePost(parsed.data.slug);
     if (current.slug !== parsed.data.slug) revalidatePath(`/news/${current.slug}`);
     revalidatePath(`${POSTS_PATH}/${parsed.data.id}`);
@@ -178,7 +172,6 @@ export async function setPostStatusAction(
     }
 
     await setPostStatus(id, status, publishedAtFor(status, current.publishedAt));
-    await markKbDocumentStale("post", id);
 
     revalidatePost(current.slug);
     return ok(
@@ -207,10 +200,6 @@ export async function deletePostAction(id: string): Promise<ActionResult> {
     // Tags and attachments cascade; the media files themselves are untouched,
     // since they are their own library entries and may be used elsewhere.
     await deletePost(id);
-
-    // The document is left for the sync to prune: its polymorphic pointer has
-    // no foreign key, so nothing removed it with the row.
-    await markKbDocumentStale("post", id);
 
     revalidatePost(post.slug);
     return ok(`“${post.titleZh}” deleted.`);

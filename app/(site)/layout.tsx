@@ -1,6 +1,5 @@
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
-import { ChatWidget } from "@/components/site/chat-widget";
 import { getSession, isStaffRole } from "@/dal";
 
 export default async function SiteLayout({
@@ -18,7 +17,6 @@ export default async function SiteLayout({
       <SiteHeader staff={staff} />
       <main className="flex-1">{children}</main>
       <SiteFooter staff={staff} />
-      <ChatWidget />
     </div>
   );
 }

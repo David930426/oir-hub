@@ -664,20 +664,20 @@ export function ProgramDetailView({
           </CardTitle>
           <CardDescription className="text-xs leading-relaxed">
             {t({
-              en: "Ask the assistant, or bring your transcript to a T-Corner session and talk it through with the staff member who runs this program.",
-              zh: "詢問 AI 助理，或攜帶歷年成績單至 T-Corner 諮詢時間與計畫負責老師諮詢。",
+              en: "Bring your transcript to a T-Corner session and talk it through with the staff member who runs this program.",
+              zh: "請攜帶歷年成績單至 T-Corner 諮詢時間，與計畫負責老師當面討論。",
             })}
           </CardDescription>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button asChild size="sm">
-              <Link href="/chat">
-                {t({ en: "Ask the AI Assistant", zh: "諮詢 AI 助理" })}
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
               <Link href="/t-corner">
                 {t({ en: "T-Corner hours", zh: "T-Corner 諮詢時間" })}
                 <ExternalLink className="size-3.5" />
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/contact">
+                {t({ en: "Contact the office", zh: "聯絡國際處" })}
               </Link>
             </Button>
           </div>

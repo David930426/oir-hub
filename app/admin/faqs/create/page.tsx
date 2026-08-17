@@ -26,7 +26,7 @@ export default async function AdminCreateFaqPage() {
         </Button>
         <PageHeader
           title="New FAQ"
-          description="The assistant answers from these, so write the source in as you go rather than afterwards."
+          description="Students quote these back at the office, so write the source in as you go rather than afterwards."
         />
       </div>
 

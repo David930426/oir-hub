@@ -70,7 +70,6 @@ const navGroups: {
       { href: "/t-corner", label: "T-Corner", hint: "Walk-in advising hours" },
     ],
   },
-  { label: "AI Assistant", href: "/chat" },
   { label: "Contact", href: "/contact" },
 ];
 

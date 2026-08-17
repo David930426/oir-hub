@@ -3,6 +3,11 @@
 Next.js 16 App Router, Drizzle + PostgreSQL, Better Auth, shadcn/ui, Tailwind v4.
 The public site is anonymous; `/admin` is the OIR staff console.
 
+The RAG assistant is **not part of the product right now**. Its tables —
+`chat_*`, `kb_documents`, `kb_chunks` — are still in `db/schema/` so the ERD is
+intact, but nothing reads or writes them, and there is no chat UI, no knowledge
+index and no Ollama/Qdrant client. Build the rest of the console first.
+
 ## Where code goes
 
 | Kind of code | Location | Naming |
@@ -10,7 +15,6 @@ The public site is anonymous; `/admin` is the OIR staff console.
 | Server actions | `lib/actions/` | `<domain>.action.ts` |
 | Database reads & writes | `lib/repositories/` | `<domain>.repository.ts` |
 | Zod schemas | `lib/validator/` | `<domain>.validator.ts` |
-| Outside services (Ollama, Qdrant) | `lib/external/` | `<service>.ts` |
 | Shared constants | `constant.ts` (repo root) | `SCREAMING_SNAKE_CASE` exports |
 | Reusable components | `components/ui/` | kebab-case `.tsx` |
 | Components used by one page only | next to that page | `app/admin/users/columns.tsx` |
@@ -29,15 +33,9 @@ Rules that follow from the table:
   sentence the caller can toast either way, plus an optional `data` for the few
   callers that need a value back. Use the helpers rather than rebuilding them:
   `parseInput` (validate, or return the failure as-is), `ok` / `fail`,
-  `describeError`, `emptyToNull`, `pluralize`. The public assistant and the
-  contact form are the only guardless actions — the site is anonymous by
-  design — and each says so at the top of its file.
-- **External services.** `lib/external/` is the only place that calls something
-  the app does not own. Everything goes through `fetchJson` in
-  `lib/external/http.ts`, which adds a timeout, retries, and turns any failure
-  into an `ExternalApiError` carrying the sentence the user should see;
-  `describeError` picks that sentence up. Actions call these clients, never
-  `fetch` directly.
+  `describeError`, `emptyToNull`, `pluralize`. Submitting the contact form is
+  the only guardless action — the site is anonymous by design — and it says so
+  at the top of its file.
 - **Repositories.** The only place that imports `@/db` (besides `db/`,
   `lib/auth.ts` and `seed.ts`). Pages and actions never build queries
   themselves. Repositories take and return plain data — no `redirect()`, no
@@ -94,7 +92,7 @@ just not for forms.
   `lib/utils.ts`, pinned to `TIME_ZONE`. Never `toLocaleString()` in a client
   component — the visitor's timezone would mismatch on hydration.
 - **Roles** are `admin | editor | viewer` (`STAFF_ROLES`). There are no student
-  accounts: the site and the assistant are anonymous.
+  accounts: the public site is anonymous.
 - **Enum display** goes through the label/tone maps in `lib/mock/labels.ts`
   (`EnumBadge`), so a stored value reads the same everywhere.
 - **Logging** uses `lib/logger.ts` (pino). Log unexpected errors in actions; do

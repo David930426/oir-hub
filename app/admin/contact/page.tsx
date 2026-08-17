@@ -30,7 +30,7 @@ export default async function AdminContactPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader
         title="Contact inbox"
-        description={`Messages from the contact form, plus questions the assistant escalated. ${pluralize(
+        description={`Questions students and parents have sent the office. ${pluralize(
           unresolved,
           "message",
         )} still waiting for a reply.`}

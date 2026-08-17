@@ -14,7 +14,6 @@ const resourceLinks = [
   { href: "/testimonials", label: "Testimonials" },
   { href: "/news", label: "News & notices" },
   { href: "/t-corner", label: "T-Corner" },
-  { href: "/chat", label: "AI Assistant" },
 ];
 
 export function SiteFooter({

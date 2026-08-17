@@ -35,13 +35,6 @@ export default function LoginPage() {
             >
               the site
             </Link>{" "}
-            and the{" "}
-            <Link
-              href="/chat"
-              className="font-medium text-primary underline-offset-2 hover:underline"
-            >
-              AI assistant
-            </Link>{" "}
             is open to everyone. Staff accounts are created by an administrator.
           </AlertDescription>
         </Alert>

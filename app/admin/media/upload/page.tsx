@@ -40,7 +40,7 @@ export default async function AdminUploadMediaPage({
           description={
             replacing
               ? `The new file becomes v${replacing.version + 1} of ${replacing.filename}, and the current version is archived.`
-              : "PDF, Word or Excel. Tag it with the academic year so the assistant can filter by freshness."
+              : "PDF, Word or Excel. Tag it with the academic year so an outdated edition is obvious at a glance."
           }
         />
       </div>

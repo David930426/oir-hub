@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import {
   ArrowLeft,
   BarChart3,
-  BookOpenCheck,
   CalendarClock,
   ChevronsUpDown,
   CircleHelp,
@@ -18,11 +17,9 @@ import {
   LayoutDashboard,
   Loader2,
   LogOut,
-  MessagesSquare,
   Newspaper,
   Quote,
   School,
-  Star,
   Tags,
   Users,
   Waypoints,
@@ -82,17 +79,9 @@ const navSections: {
     ],
   },
   {
-    label: "Knowledge base",
+    label: "Questions",
     items: [
       { href: "/admin/faqs", label: "FAQs", icon: CircleHelp },
-      { href: "/admin/knowledge", label: "Knowledge index", icon: BookOpenCheck },
-    ],
-  },
-  {
-    label: "Chat & evaluation",
-    items: [
-      { href: "/admin/conversations", label: "Conversations", icon: MessagesSquare },
-      { href: "/admin/feedback", label: "Feedback & survey", icon: Star },
       { href: "/admin/contact", label: "Contact inbox", icon: Inbox },
     ],
   },

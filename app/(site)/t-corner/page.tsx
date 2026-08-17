@@ -128,15 +128,15 @@ export default async function TCornerPage() {
         <CardHeader>
           <CardTitle className="text-base">Can&apos;t make any of these?</CardTitle>
           <CardDescription>
-            The assistant answers from the same documents at any hour, and the
-            contact form reaches the same staff by email.
+            The contact form reaches the same staff by email, and the FAQ covers
+            most of what these sessions are asked.
           </CardDescription>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button asChild size="sm">
-              <Link href="/chat">Ask the AI Assistant</Link>
+              <Link href="/contact">Send a message</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/contact">Send a message</Link>
+              <Link href="/faqs">Read the FAQ</Link>
             </Button>
           </div>
         </CardHeader>

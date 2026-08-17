@@ -239,10 +239,10 @@ export function BulletinDetailView({
           </p>
           <div className="flex flex-wrap gap-2">
             <Button asChild size="sm">
-              <Link href="/chat">Ask the assistant</Link>
+              <Link href="/faqs">Read the FAQ</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/faqs">Read the FAQ</Link>
+              <Link href="/contact">Ask the office</Link>
             </Button>
           </div>
         </CardContent>

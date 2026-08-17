@@ -34,7 +34,7 @@ export default async function AdminFaqsPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader
         title="FAQs"
-        description={`Staff-written answers, shown on the site and indexed for the assistant.${
+        description={`Staff-written answers, shown on the public FAQ page.${
           stale > 0
             ? ` ${pluralize(stale, "answer")} not reviewed in the last ${REVIEW_INTERVAL_DAYS} days.`
             : ""

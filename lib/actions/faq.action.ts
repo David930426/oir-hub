@@ -13,7 +13,6 @@ import {
   updateFaq,
   type FaqWrite,
 } from "@/lib/repositories/faq.repository";
-import { markKbDocumentStale } from "@/lib/repositories/knowledge.repository";
 import {
   describeError,
   emptyToNull,
@@ -33,12 +32,11 @@ import {
 } from "@/lib/validator/faq.validator";
 
 /**
- * FAQs — the answers the site publishes and the assistant retrieves from.
+ * FAQs — the answers the site publishes.
  *
- * These rows carry more weight than a news post: a wrong FAQ is repeated by the
- * assistant to everyone who asks. So every write records who stood behind it,
- * publishing an answer flagged `needsHumanConfirm` requires a citation, and any
- * change marks the indexed copy stale.
+ * These rows carry more weight than a news post: a wrong FAQ is the one a
+ * student quotes back at the office. So every write records who stood behind
+ * it, and an answer cannot be published without a source to check it against.
  */
 
 const FAQ_PATH = "/admin/faqs";
@@ -129,8 +127,6 @@ export async function updateFaqAction(input: UpdateFaqInput): Promise<ActionResu
       reviewedById: session.user.id,
     });
 
-    await markKbDocumentStale("faq", parsed.data.id);
-
     revalidateFaq(parsed.data.id);
     return ok(
       `FAQ updated, with ${pluralize(parsed.data.sources.length, "source")}.`,
@@ -165,13 +161,12 @@ export async function setFaqPublishedAction(
     }
 
     await setFaqPublished(id, published);
-    await markKbDocumentStale("faq", id);
 
     revalidateFaq(id);
     return ok(
       published
-        ? "Published — it is on the site and will be indexed at the next run."
-        : "Unpublished — it is hidden from the site and will drop out of the index.",
+        ? "Published — it is live on the site."
+        : "Unpublished — it is hidden from the site.",
     );
   } catch (error) {
     logger.error({ action, error, id }, "failed to change FAQ publication");
@@ -216,10 +211,8 @@ export async function deleteFaqAction(id: string): Promise<ActionResult> {
     const faq = await findFaqById(id);
     if (!faq) return fail(MISSING);
 
-    // FAQ_SOURCES cascades. The knowledge base document is pruned by the sync,
-    // since its pointer carries no foreign key to cascade through.
+    // FAQ_SOURCES cascades.
     await deleteFaq(id);
-    await markKbDocumentStale("faq", id);
 
     revalidateFaq();
     return ok("FAQ deleted.");

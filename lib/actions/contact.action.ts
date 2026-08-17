@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin, requireWriter } from "@/dal";
 import { GENERIC_ACTION_ERROR } from "@/constant";
 import { logger } from "@/lib/logger";
-import { findChatSessionById } from "@/lib/repositories/chat.repository";
 import {
   createContactMessage,
   deleteContactMessage,
@@ -29,8 +28,8 @@ import {
  * The contact inbox.
  *
  * Submitting is open to anonymous visitors — that is the whole point of a
- * contact form, and the assistant escalates to it when it cannot answer. Reading
- * and clearing the queue is staff-only, so those actions carry the usual guards.
+ * contact form. Reading and clearing the queue is staff-only, so those actions
+ * carry the usual guards.
  */
 
 const CONTACT_PATH = "/admin/contact";
@@ -39,11 +38,11 @@ const MISSING = "That message no longer exists.";
 // ---------- Public ----------
 
 /**
- * Files a message from the contact page or from an escalated chat.
+ * Files a message from the contact page.
  *
- * `fromSessionId` is verified rather than trusted: it arrives from the browser,
- * and a session id that does not exist is stored as null so the row is still
- * filed instead of failing on a foreign key.
+ * `fromSessionId` exists in the schema for questions escalated from the
+ * assistant. Nothing sets it while the assistant is out of the product, so it
+ * is always written as null rather than trusted from the browser.
  */
 export async function submitContactMessageAction(
   input: ContactInput,
@@ -53,18 +52,10 @@ export async function submitContactMessageAction(
   const parsed = parseInput(contactSchema, input);
   if (!parsed.success) return parsed;
 
-  const { name, email, topic, body, fromSessionId } = parsed.data;
+  const { name, email, topic, body } = parsed.data;
 
   try {
-    const session = fromSessionId ? await findChatSessionById(fromSessionId) : null;
-
-    await createContactMessage({
-      name,
-      email,
-      topic,
-      body,
-      fromSessionId: session?.id ?? null,
-    });
+    await createContactMessage({ name, email, topic, body, fromSessionId: null });
 
     revalidatePath(CONTACT_PATH);
     return ok(`Message sent. The office will reply to ${email} within three working days.`);

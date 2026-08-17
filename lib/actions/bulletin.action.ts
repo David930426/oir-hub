@@ -13,7 +13,6 @@ import {
   updateBulletin,
   type BulletinWrite,
 } from "@/lib/repositories/bulletin.repository";
-import { markKbDocumentStale } from "@/lib/repositories/knowledge.repository";
 import { findMediaFileById } from "@/lib/repositories/media.repository";
 import { findProgramById } from "@/lib/repositories/program.repository";
 import {
@@ -37,9 +36,8 @@ import {
  * Bulletins — the selection calls students apply through.
  *
  * The deadline on one of these is the single most consequential date on the
- * site, so the PDF and the program are checked to exist before the row is
- * written, and any change flags the indexed copy stale — the assistant must not
- * keep answering with last term's date.
+ * site, so the PDF and the program are both checked to exist before the row is
+ * written.
  */
 
 const BULLETINS_PATH = "/admin/bulletins";
@@ -144,7 +142,6 @@ export async function updateBulletinAction(
     if (problem) return fail(problem);
 
     await updateBulletin({ id: parsed.data.id, ...row });
-    await markKbDocumentStale("bulletin", parsed.data.id);
 
     revalidateBulletin(parsed.data.id);
     revalidatePath(`${BULLETINS_PATH}/${parsed.data.id}/edit`);
@@ -174,7 +171,6 @@ export async function setBulletinStatusAction(
     }
 
     await setBulletinStatus(id, status);
-    await markKbDocumentStale("bulletin", id);
 
     revalidateBulletin(id);
     return ok(
@@ -201,7 +197,6 @@ export async function deleteBulletinAction(id: string): Promise<ActionResult> {
     // The PDF stays in the media library: it is a document in its own right,
     // and students may still hold a link to it.
     await deleteBulletin(id);
-    await markKbDocumentStale("bulletin", id);
 
     revalidateBulletin();
     return ok(`“${bulletin.titleZh}” deleted.`);

@@ -49,7 +49,7 @@ export function faqColumns(canWrite: boolean): ColumnDef<FaqRow>[] {
               {row.original.sourceCount}
             </span>
             {row.original.needsHumanConfirm && (
-              // The assistant escalates these instead of answering, which is
+              // Flagged as too consequential to answer from the page alone —
               // worth seeing at a glance.
               <span className="flex items-center gap-1 text-amber-700">
                 <AlertTriangle className="size-3" />
