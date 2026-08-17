@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull, or } from "drizzle-orm";
 import { db } from "@/db";
 import { fundings, programs } from "@/db/schema/mobility.schema";
 import type {
@@ -41,11 +41,42 @@ export async function listFundings(): Promise<FundingRecord[]> {
     .orderBy(asc(fundings.nameZh));
 }
 
+/**
+ * Every funding call for the public list, with its program.
+ *
+ * Closed and archived rows are included on purpose: a student planning next
+ * year needs to see the scheme that closed last month, and the card says which
+ * state it is in.
+ */
+export async function listFundingsForSite() {
+  return db.query.fundings.findMany({
+    with: { program: true },
+    orderBy: [asc(fundings.nameZh)],
+  });
+}
+
 /** Open calls for the public site. */
 export async function listOpenFundings() {
   return db.query.fundings.findMany({
     where: eq(fundings.status, "open"),
     with: { program: true, formFile: true },
+    orderBy: [asc(fundings.nameZh)],
+  });
+}
+
+/**
+ * Funding a student on this program could apply for.
+ *
+ * Includes the calls with no program at all: a null `programId` means the grant
+ * is open to any program, and leaving those out would hide most of the
+ * Ministry's schemes from the page a student actually reads.
+ */
+export async function listFundingsForProgram(programId: string) {
+  return db.query.fundings.findMany({
+    where: and(
+      eq(fundings.status, "open"),
+      or(eq(fundings.programId, programId), isNull(fundings.programId)),
+    ),
     orderBy: [asc(fundings.nameZh)],
   });
 }

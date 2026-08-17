@@ -1,4 +1,4 @@
-import { asc, count, eq } from "drizzle-orm";
+import { asc, count, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   bulletins,
@@ -80,6 +80,82 @@ export async function listActivePrograms() {
     .from(programs)
     .where(eq(programs.active, true))
     .orderBy(asc(programs.sortOrder), asc(programs.nameZh));
+}
+
+/** An active program with the figures the public list prints beside it. */
+export type SiteProgramRecord = {
+  id: string;
+  slug: string;
+  type: ProgramTypeValue;
+  nameZh: string;
+  nameEn: string | null;
+  overviewZh: string;
+  overviewEn: string | null;
+  schoolCount: number;
+  totalQuota: number;
+  openBulletins: number;
+  totalBulletins: number;
+  fundingCount: number;
+};
+
+/**
+ * Active programs, each with what a student wants to compare them by.
+ *
+ * The counts are aggregated in the database and merged here rather than joined
+ * in one query: four independent one-to-many counts against the same table
+ * would multiply each other out, and a program with three schools would report
+ * nine of everything else.
+ */
+export async function listProgramsForSite(): Promise<SiteProgramRecord[]> {
+  const [rows, schoolCounts, bulletinCounts, fundingCounts] = await Promise.all([
+    db.query.programs.findMany({
+      where: eq(programs.active, true),
+      orderBy: [asc(programs.sortOrder), asc(programs.nameZh)],
+    }),
+    db
+      .select({
+        programId: partnerSchools.programId,
+        total: count(),
+        quota: sql<number>`coalesce(sum(${partnerSchools.quota}), 0)`.mapWith(Number),
+      })
+      .from(partnerSchools)
+      .where(eq(partnerSchools.active, true))
+      .groupBy(partnerSchools.programId),
+    db
+      .select({
+        programId: bulletins.programId,
+        total: count(),
+        open: sql<number>`count(*) filter (where ${bulletins.status} = 'open')`.mapWith(
+          Number,
+        ),
+      })
+      .from(bulletins)
+      .groupBy(bulletins.programId),
+    db
+      .select({ programId: fundings.programId, total: count() })
+      .from(fundings)
+      .where(eq(fundings.status, "open"))
+      .groupBy(fundings.programId),
+  ]);
+
+  const schoolsBy = new Map(schoolCounts.map((row) => [row.programId, row]));
+  const bulletinsBy = new Map(bulletinCounts.map((row) => [row.programId, row]));
+  const fundingBy = new Map(fundingCounts.map((row) => [row.programId, row]));
+
+  return rows.map((program) => ({
+    id: program.id,
+    slug: program.slug,
+    type: program.type,
+    nameZh: program.nameZh,
+    nameEn: program.nameEn,
+    overviewZh: program.overviewZh,
+    overviewEn: program.overviewEn,
+    schoolCount: schoolsBy.get(program.id)?.total ?? 0,
+    totalQuota: schoolsBy.get(program.id)?.quota ?? 0,
+    openBulletins: bulletinsBy.get(program.id)?.open ?? 0,
+    totalBulletins: bulletinsBy.get(program.id)?.total ?? 0,
+    fundingCount: fundingBy.get(program.id)?.total ?? 0,
+  }));
 }
 
 export async function findProgramById(id: string) {

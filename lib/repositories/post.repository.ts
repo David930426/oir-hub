@@ -91,6 +91,27 @@ export async function listPublishedPosts(type?: PostTypeValue) {
   });
 }
 
+/**
+ * Published posts with everything the news list prints on a card: who wrote it,
+ * which category and tags it carries, and how many files hang off it.
+ *
+ * One query with its relations rather than a lookup per card — the list renders
+ * on the server, so a per-row round trip would show up directly in the page's
+ * response time.
+ */
+export async function listPublishedPostsForSite() {
+  return db.query.posts.findMany({
+    where: eq(posts.status, "published"),
+    orderBy: [desc(posts.publishedAt)],
+    with: {
+      category: true,
+      author: { columns: { name: true } },
+      postTags: { with: { tag: true } },
+      attachments: { columns: { id: true } },
+    },
+  });
+}
+
 export async function findPostById(id: string) {
   return db.query.posts.findFirst({
     where: eq(posts.id, id),
@@ -106,6 +127,7 @@ export async function findPostBySlug(slug: string) {
     where: eq(posts.slug, slug),
     with: {
       category: true,
+      author: { columns: { name: true } },
       postTags: { with: { tag: true } },
       attachments: {
         orderBy: [asc(postAttachments.sortOrder)],

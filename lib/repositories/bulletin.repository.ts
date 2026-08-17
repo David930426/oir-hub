@@ -65,6 +65,14 @@ export async function listOpenBulletins() {
   });
 }
 
+/** Every call issued for one program, newest deadline first. */
+export async function listBulletinsForProgram(programId: string) {
+  return db.query.bulletins.findMany({
+    where: eq(bulletins.programId, programId),
+    orderBy: [desc(bulletins.deadlineAt)],
+  });
+}
+
 export async function findBulletinById(id: string) {
   return db.query.bulletins.findFirst({
     where: eq(bulletins.id, id),

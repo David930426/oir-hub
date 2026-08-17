@@ -37,23 +37,39 @@ import {
   chatFeedback,
   chatSessions,
   chatsPerDay,
-  contactMessages,
   formatTerm,
-  getProgram,
-  kbDocuments,
   kbStatusMeta,
   messagesForSession,
-  openBulletins,
   sessionEscalated,
   sessionRating,
-  testimonials,
-  faqs,
-  daysUntil,
 } from "@/lib/mock";
-import type { KbStatus } from "@/lib/mock";
+import { listOpenBulletins } from "@/lib/repositories/bulletin.repository";
+import { listContactMessages } from "@/lib/repositories/contact.repository";
+import { listFaqs } from "@/lib/repositories/faq.repository";
+import {
+  listKbDocuments,
+  type KbStatusValue,
+} from "@/lib/repositories/knowledge.repository";
+import { listTestimonials } from "@/lib/repositories/testimonial.repository";
+import { formatDay, isOlderThan } from "@/lib/utils";
 import { REVIEW_INTERVAL_DAYS } from "@/constant";
 
-export default function AdminDashboardPage() {
+/**
+ * The console's landing screen.
+ *
+ * Content figures come from the database; the assistant's numbers are still the
+ * design-stage fixtures, because the chat itself has not been wired up yet.
+ */
+export default async function AdminDashboardPage() {
+  const [kbDocuments, contactMessages, bulletins, testimonials, faqs] =
+    await Promise.all([
+      listKbDocuments(),
+      listContactMessages(),
+      listOpenBulletins(),
+      listTestimonials(),
+      listFaqs(),
+    ]);
+
   const maxChats = Math.max(...chatsPerDay.map((d) => d.count));
   const todayChats = chatsPerDay[chatsPerDay.length - 1];
   const previousChats = chatsPerDay[chatsPerDay.length - 2];
@@ -71,18 +87,21 @@ export default function AdminDashboardPage() {
       acc[doc.status] += 1;
       return acc;
     },
-    { indexed: 0, pending: 0, stale: 0, failed: 0 } as Record<KbStatus, number>
+    { indexed: 0, pending: 0, stale: 0, failed: 0 } as Record<
+      KbStatusValue,
+      number
+    >
   );
 
   const unresolved = contactMessages.filter((m) => !m.resolved);
-  const calls = openBulletins();
+  const calls = bulletins;
 
   // Work queues — the rows that need a human before the site is correct.
   const awaitingConsent = testimonials.filter(
     (t) => !t.consentGiven && t.status !== "archived"
   );
-  const staleFaqs = faqs.filter(
-    (f) => -daysUntil(f.lastReviewedAt) > REVIEW_INTERVAL_DAYS
+  const staleFaqs = faqs.filter((f) =>
+    isOlderThan(f.lastReviewedAt, REVIEW_INTERVAL_DAYS)
   );
   const failedDocs = kbDocuments.filter((d) => d.status === "failed");
 
@@ -116,7 +135,7 @@ export default function AdminDashboardPage() {
       label: "Unresolved contacts",
       value: String(unresolved.length),
       sub: unresolved.length
-        ? `oldest from ${unresolved[unresolved.length - 1].createdAt.slice(0, 10)}`
+        ? `oldest from ${formatDay(unresolved[unresolved.length - 1].createdAt)}`
         : "inbox is clear",
       icon: Inbox,
       href: "/admin/contact",
@@ -248,7 +267,7 @@ export default function AdminDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {(Object.keys(kbStatusMeta) as KbStatus[]).map((status) => (
+            {(Object.keys(kbStatusMeta) as KbStatusValue[]).map((status) => (
               <div key={status} className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
                   <ToneDot
@@ -308,7 +327,7 @@ export default function AdminDashboardPage() {
             </TableHeader>
             <TableBody>
               {calls.map((bulletin) => {
-                const program = getProgram(bulletin.programId);
+                const program = bulletin.program;
                 return (
                   <TableRow key={bulletin.id}>
                     <TableCell className="max-w-72">
@@ -316,11 +335,11 @@ export default function AdminDashboardPage() {
                         href={`/bulletins/${bulletin.id}`}
                         className="block truncate font-medium hover:text-primary"
                       >
-                        {bulletin.title.zh}
+                        {bulletin.titleZh}
                       </Link>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {program ? program.name.en ?? program.name.zh : "—"}
+                      {program ? program.nameEn ?? program.nameZh : "—"}
                     </TableCell>
                     <TableCell>
                       <span className="rounded bg-accent px-2 py-0.5 font-mono text-xs text-accent-foreground">

@@ -50,6 +50,24 @@ export async function listSiteStatsForYear(academicYear: string) {
   });
 }
 
+/**
+ * The most recent year the office has recorded figures for.
+ *
+ * The homepage asks for "this year's numbers" without knowing which year that
+ * is — it moves on its own each time the annual report is filed, and hard-coding
+ * it is how a site ends up quoting figures from three years ago.
+ */
+export async function listLatestSiteStats() {
+  const [newest] = await db
+    .select({ academicYear: siteStats.academicYear })
+    .from(siteStats)
+    .orderBy(desc(siteStats.academicYear))
+    .limit(1);
+
+  if (!newest) return [];
+  return listSiteStatsForYear(newest.academicYear);
+}
+
 export async function findSiteStatById(id: string) {
   return db.query.siteStats.findFirst({ where: eq(siteStats.id, id) });
 }

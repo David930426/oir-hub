@@ -660,7 +660,10 @@ const FUNDING_ROWS: (typeof fundings.$inferInsert)[] = [
   },
 ];
 
-const FAQ_CATEGORY_ROWS: (typeof categories.$inferInsert)[] = [
+// `id` has a default, so `$inferInsert` makes it optional — but this script
+// writes fixed ids so it can delete exactly the rows it owns, and the delete
+// below needs to know they are always there.
+const FAQ_CATEGORY_ROWS: (typeof categories.$inferInsert & { id: string })[] = [
   {
     id: "cat-faq-exchange",
     slug: "exchange",
