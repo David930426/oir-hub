@@ -88,7 +88,7 @@ export function BulletinDetailView({
           </Badge>
           {program && <EnumBadge value={program.type} meta={programTypeMeta} />}
         </div>
-        <h1 className="text-3xl font-bold leading-tight tracking-tight">
+        <h1 className="text-3xl leading-tight tracking-tight">
           {t(bulletin.title)}
         </h1>
         {program && (
@@ -163,7 +163,7 @@ export function BulletinDetailView({
       {schools.length > 0 && (
         <section className="mb-10">
           <div className="mb-4 flex items-end justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
+            <h2 className="flex items-center gap-2 text-xl tracking-tight">
               <School className="size-5 text-primary" />
               Schools in this call
             </h2>

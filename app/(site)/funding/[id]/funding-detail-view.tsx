@@ -73,7 +73,7 @@ export function FundingDetailView({
           <EnumBadge value={funding.source} meta={fundingSourceMeta} />
           <EnumBadge value={funding.status} meta={fundingStatusMeta} />
         </div>
-        <h1 className="text-3xl font-bold leading-tight tracking-tight">
+        <h1 className="text-3xl leading-tight tracking-tight">
           {t(funding.name)}
         </h1>
         {program && (
@@ -118,7 +118,7 @@ export function FundingDetailView({
       </div>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-xl font-bold tracking-tight">Who can apply</h2>
+        <h2 className="mb-3 text-xl tracking-tight">Who can apply</h2>
         <div className="space-y-3 leading-relaxed text-muted-foreground">
           {tp(funding.eligibility).map((para, i) => (
             <p key={i}>{para}</p>
@@ -127,7 +127,7 @@ export function FundingDetailView({
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-xl font-bold tracking-tight">
+        <h2 className="mb-3 text-xl tracking-tight">
           Documents you need
         </h2>
         <ul className="space-y-2">
@@ -141,7 +141,7 @@ export function FundingDetailView({
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-xl font-bold tracking-tight">Notes</h2>
+        <h2 className="mb-3 text-xl tracking-tight">Notes</h2>
         <div className="space-y-3 leading-relaxed text-muted-foreground">
           {tp(funding.notes).map((para, i) => (
             <p key={i}>{para}</p>

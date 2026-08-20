@@ -1,3 +1,4 @@
+import { PageBanner } from "@/components/site/page-banner";
 import { listActivePrograms } from "@/lib/repositories/program.repository";
 import { listActivePartnerSchools } from "@/lib/repositories/school.repository";
 import { SchoolsView, type SiteSchool } from "./schools-view";
@@ -23,12 +24,19 @@ export default async function PartnerSchoolsPage() {
   }));
 
   return (
-    <SchoolsView
-      partnerSchools={partnerSchools}
-      programs={programs.map((program) => ({
-        id: program.id,
-        name: { zh: program.nameZh, en: program.nameEn },
-      }))}
-    />
+    <>
+      <PageBanner eyebrow="Where you can go" title="Partner schools">
+        Filter by the GPA you actually have and see only the schools you can
+        realistically be nominated to. Quotas are per term and reset with each
+        bulletin.
+      </PageBanner>
+      <SchoolsView
+        partnerSchools={partnerSchools}
+        programs={programs.map((program) => ({
+          id: program.id,
+          name: { zh: program.nameZh, en: program.nameEn },
+        }))}
+      />
+    </>
   );
 }

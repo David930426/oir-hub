@@ -1,3 +1,4 @@
+import { PageBanner } from "@/components/site/page-banner";
 import { listPublishedPostsForSite } from "@/lib/repositories/post.repository";
 import { listCategories, listTags } from "@/lib/repositories/taxonomy.repository";
 import { formatDay } from "@/lib/utils";
@@ -32,18 +33,24 @@ export default async function NewsPage() {
   }));
 
   return (
-    <NewsView
-      all={all}
-      postCategories={categories
-        .filter((category) => category.kind === "post")
-        .map((category) => ({
-          id: category.id,
-          name: { zh: category.nameZh, en: category.nameEn },
+    <>
+      <PageBanner eyebrow="From the office" title="News & notices">
+        Everything the office publishes — deadline notices, scholarship results,
+        partnership news, and how-to guides.
+      </PageBanner>
+      <NewsView
+        all={all}
+        postCategories={categories
+          .filter((category) => category.kind === "post")
+          .map((category) => ({
+            id: category.id,
+            name: { zh: category.nameZh, en: category.nameEn },
+          }))}
+        tags={tags.map((tag) => ({
+          id: tag.id,
+          name: { zh: tag.nameZh, en: tag.nameEn },
         }))}
-      tags={tags.map((tag) => ({
-        id: tag.id,
-        name: { zh: tag.nameZh, en: tag.nameEn },
-      }))}
-    />
+      />
+    </>
   );
 }

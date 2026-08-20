@@ -1,3 +1,4 @@
+import { PageBanner } from "@/components/site/page-banner";
 import { listPublishedTestimonials } from "@/lib/repositories/testimonial.repository";
 import { TestimonialsView, type SiteTestimonial } from "./testimonials-view";
 
@@ -16,5 +17,13 @@ export default async function TestimonialsPage() {
       : null,
   }));
 
-  return <TestimonialsView all={all} />;
+  return (
+    <>
+      <PageBanner eyebrow="From students who went" title="Student testimonials">
+        Reports written by students after they returned, published only with
+        their consent. Names may be shortened at the author&apos;s request.
+      </PageBanner>
+      <TestimonialsView all={all} />
+    </>
+  );
 }

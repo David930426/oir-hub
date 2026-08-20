@@ -1,3 +1,4 @@
+import { PageBanner } from "@/components/site/page-banner";
 import { listFundingsForSite } from "@/lib/repositories/funding.repository";
 import { listActivePrograms } from "@/lib/repositories/program.repository";
 import { FundingView, type SiteFunding } from "./funding-view";
@@ -25,12 +26,19 @@ export default async function FundingPage() {
   }));
 
   return (
-    <FundingView
-      fundings={fundings}
-      programs={programs.map((program) => ({
-        id: program.id,
-        name: { zh: program.nameZh, en: program.nameEn },
-      }))}
-    />
+    <>
+      <PageBanner eyebrow="Fund your journey" title="Funding">
+        Grants and scholarships you can apply for alongside a program. Ministry
+        and university awards can usually be held together — check the notes on
+        each one.
+      </PageBanner>
+      <FundingView
+        fundings={fundings}
+        programs={programs.map((program) => ({
+          id: program.id,
+          name: { zh: program.nameZh, en: program.nameEn },
+        }))}
+      />
+    </>
   );
 }

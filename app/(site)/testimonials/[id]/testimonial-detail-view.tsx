@@ -62,7 +62,7 @@ export function TestimonialDetailView({
           </Badge>
         </div>
 
-        <h1 className="text-3xl font-bold leading-tight tracking-tight">
+        <h1 className="text-3xl leading-tight tracking-tight">
           {school ? t(school.name) : "Exchange report"}
         </h1>
 
@@ -115,7 +115,7 @@ export function TestimonialDetailView({
         <>
           <Separator className="my-10" />
           <section>
-            <h2 className="mb-4 text-lg font-bold tracking-tight">
+            <h2 className="mb-4 text-lg tracking-tight">
               More from this school
             </h2>
             <div className="space-y-3">

@@ -70,7 +70,7 @@ export function PostView({
           )}
         </div>
 
-        <h1 className="text-3xl font-bold leading-tight tracking-tight">
+        <h1 className="text-3xl leading-tight tracking-tight">
           {t(post.title)}
         </h1>
 
@@ -136,7 +136,7 @@ export function PostView({
         <>
           <Separator className="my-10" />
           <section>
-            <h2 className="mb-4 text-lg font-bold tracking-tight">
+            <h2 className="mb-4 text-lg tracking-tight">
               More in {category ? t(category) : "this category"}
             </h2>
             <div className="space-y-3">

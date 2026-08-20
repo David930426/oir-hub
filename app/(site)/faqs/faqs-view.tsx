@@ -87,16 +87,6 @@ export function FaqsView({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Frequently asked questions
-        </h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Written and reviewed by OIR staff. Every answer lists the document it
-          came from, so you can check the original yourself.
-        </p>
-      </div>
-
       <div className="mb-6 space-y-3">
         <Tabs value={categoryId} onValueChange={setCategoryId}>
           <TabsList className="h-auto! flex-wrap gap-1">

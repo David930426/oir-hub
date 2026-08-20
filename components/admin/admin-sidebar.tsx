@@ -37,8 +37,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { logoutAction } from "@/lib/actions/logout.action";
-import { userRoleMeta } from "@/lib/mock";
-import { toneClasses } from "@/lib/mock/labels";
+import { toneClasses, userRoleMeta } from "@/lib/mock/labels";
 import { cn } from "@/lib/utils";
 
 /** Sidebar sections mirror the ERD domains so staff learn the model as they work. */

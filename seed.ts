@@ -10,9 +10,11 @@ import {
   fundings,
   partnerSchools,
   programs,
+  siteStats,
   tcornerSlots,
+  testimonials,
 } from "@/db/schema/mobility.schema";
-import { categories } from "@/db/schema/cms.schema";
+import { categories, postTags, posts, tags } from "@/db/schema/cms.schema";
 import { faqs } from "@/db/schema/knowledge.schema";
 
 /**
@@ -37,10 +39,21 @@ import { faqs } from "@/db/schema/knowledge.schema";
  *      Like T-Corner, faqs.reviewedById is a required real user — every
  *      seeded FAQ is attributed to the admin as a placeholder reviewer.
  *
- * Not seeded: TESTIMONIALS, SITE_STATS — same "needs a real staff user"
- * situation as T-Corner and FAQs, left for later since attributing them to
- * the single admin felt like a worse placeholder for a byline than for a
- * reviewed-by or hosted-by credit.
+ *   4. The newsroom — post CATEGORIES, TAGS, POSTS and POST_TAGS — so /news
+ *      lists something and the homepage has notices to show. Seven posts are
+ *      published and one is left as a draft, so /admin/posts has both states
+ *      to look at. posts.authorId is a required real user: the admin again.
+ *
+ *   5. TESTIMONIALS and SITE_STATS, which fill /testimonials and the
+ *      hand-entered figures on the homepage.
+ *
+ * Every step is skipped if its own table already has rows, so re-running
+ * `pnpm seed` is safe. --force wipes and re-inserts all of them.
+ *
+ * Not seeded: MEDIA_FILES and POST_ATTACHMENTS. A media row without a real
+ * object in MinIO would 404 on download, which is worse than an empty library
+ * — upload through /admin/media/upload instead. CONTACT_MESSAGES is left
+ * empty too: it is an inbox, and it should fill from the contact form.
  *
  * Run it with:
  *   pnpm seed
@@ -886,6 +899,326 @@ function buildTcornerRows(
   ];
 }
 
+// ---------- Step 4: Newsroom (categories, tags, posts) ----------
+
+/*
+ * `categories.slug` is unique across the whole table, not per `kind` — so a
+ * post category cannot reuse a slug the FAQ categories already hold. The two
+ * that would collide ("exchange" and "funding", both taken by
+ * FAQ_CATEGORY_ROWS above) carry a `news-` prefix here. Nothing routes on these
+ * slugs today; the news page filters by category id.
+ */
+const POST_CATEGORY_ROWS: (typeof categories.$inferInsert & { id: string })[] = [
+  { id: "pcat-exchange", slug: "news-exchange", kind: "post", nameZh: "交換計畫", nameEn: "Exchange", sortOrder: 1 },
+  { id: "pcat-funding", slug: "news-funding", kind: "post", nameZh: "獎助學金", nameEn: "Funding", sortOrder: 2 },
+  { id: "pcat-partnership", slug: "partnership", kind: "post", nameZh: "姊妹校消息", nameEn: "Partnerships", sortOrder: 3 },
+  { id: "pcat-office", slug: "office", kind: "post", nameZh: "辦公室公告", nameEn: "Office notices", sortOrder: 4 },
+];
+
+const TAG_ROWS: (typeof tags.$inferInsert & { id: string })[] = [
+  { id: "tag-01", slug: "deadline", nameZh: "截止日", nameEn: "Deadline" },
+  { id: "tag-02", slug: "info-session", nameZh: "說明會", nameEn: "Info session" },
+  { id: "tag-03", slug: "japan", nameZh: "日本", nameEn: "Japan" },
+  { id: "tag-04", slug: "europe", nameZh: "歐洲", nameEn: "Europe" },
+  { id: "tag-05", slug: "scholarship", nameZh: "獎學金", nameEn: "Scholarship" },
+  { id: "tag-06", slug: "new-partner", nameZh: "新姊妹校", nameEn: "New partner" },
+  { id: "tag-07", slug: "results", nameZh: "錄取公告", nameEn: "Results" },
+  { id: "tag-08", slug: "office-hours", nameZh: "服務時間", nameEn: "Office hours" },
+];
+
+function buildPostRows(authorId: string): (typeof posts.$inferInsert & { id: string })[] {
+  return [
+    {
+      id: "post-01",
+      slug: "115-2-exchange-application-open",
+      titleZh: "115學年度第2學期交換學生甄選開始受理",
+      titleEn: "115-2 Exchange Student Selection Now Open",
+      bodyZh: "國際處自即日起受理115學年度第2學期交換學生申請。本梯次共開放18個國家、42所姊妹校，其中歐洲地區新增6校。\n\n申請資格為在校修業滿兩學期、累計GPA 3.0以上，並符合姊妹校語言門檻。線上報名系統於2026年8月15日17:00關閉，逾期恕不受理。\n\n說明會將於國際大樓302室舉行兩場：7月22日（三）與7月29日（三），12:10–13:00，兩場內容相同。",
+      bodyEn: "The Office of International Relations is accepting applications for the 115-2 semester exchange program. This round covers 42 partner universities in 18 countries, including 6 new partners in Europe.\n\nApplicants must have completed at least two semesters, hold a cumulative GPA of 3.0 or above, and meet the language requirement of the host university. The online form closes on 15 August 2026 at 17:00 — late submissions are not accepted.\n\nTwo information sessions will be held in International Building Room 302 on 22 July and 29 July (Wednesdays, 12:10–13:00). Both cover the same content.",
+      categoryId: "pcat-exchange",
+      type: "notice",
+      status: "published",
+      publishedAt: new Date("2026-07-14"),
+      seoTitle: "115-2 Exchange Student Selection Now Open | OIR Tunghai",
+      seoDescription: "Applications for the 115-2 semester exchange program are open until 15 August 2026. 42 partner universities across 18 countries.",
+      externalUrl: null,
+      authorId,
+    },
+    {
+      id: "post-02",
+      slug: "fulbright-graduate-grant-deadline-extended",
+      titleZh: "傅爾布萊特留美獎助金截止日延長",
+      titleEn: "Fulbright Taiwan Graduate Grants — Deadline Extended",
+      bodyZh: "學術交流基金會（Fulbright Taiwan）宣布，2027–2028年度留美獎助金申請截止日延長至2026年7月31日。\n\n獎助金支持赴美攻讀碩博士學位，每學年最高補助美金30,000元，可續領一年。申請者須具中華民國國籍，並於2027年6月前取得學士學位。\n\n申請文件包含三封推薦信、研究計畫書及有效TOEFL或IELTS成績。國際處提供計畫書審閱服務，請至聯絡頁面預約。",
+      bodyEn: "The Foundation for Scholarly Exchange (Fulbright Taiwan) has extended the deadline for 2027–2028 graduate study grants to 31 July 2026.\n\nGrants support master's or doctoral study in the United States and cover up to USD 30,000 per academic year, renewable once. Applicants must hold Taiwan citizenship and a bachelor's degree by June 2027.\n\nApplications require three recommendation letters, a study objective essay, and valid TOEFL or IELTS scores. The OIR reviews essay drafts — book a slot from the contact page.",
+      categoryId: "pcat-funding",
+      type: "news",
+      status: "published",
+      publishedAt: new Date("2026-07-06"),
+      seoTitle: "Fulbright Taiwan graduate grant deadline extended to 31 July 2026",
+      seoDescription: "Fulbright Taiwan extended its 2027–2028 graduate study grant deadline to 31 July 2026. Up to USD 30,000 per year.",
+      externalUrl: "https://www.fulbright.org.tw/",
+      authorId,
+    },
+    {
+      id: "post-03",
+      slug: "new-partnership-ku-leuven",
+      titleZh: "與比利時魯汶大學簽署交換協議",
+      titleEn: "New Partnership Signed with KU Leuven, Belgium",
+      bodyZh: "本校與比利時魯汶大學（KU Leuven）正式簽署學生交換協議。魯汶大學創校於1425年，是比利時排名第一、歐洲歷史最悠久的大學之一。\n\n自116學年度起，每年提供4個交換名額，免繳姊妹校學費。工學院、管理學院、社科院及生醫領域皆有英語授課課程。\n\n魯汶距布魯塞爾約25分鐘車程，學生回報每月生活費含住宿約為900至1,100歐元。首次甄選將併入116學年度交換申請，預計2027年1月開放。",
+      bodyEn: "We have signed a student exchange agreement with KU Leuven, Belgium's highest-ranked university and one of Europe's oldest, founded in 1425.\n\nStarting in academic year 116, four students per year can study at KU Leuven with tuition fully waived. English-taught courses are available across engineering, management, social sciences, and biomedical fields.\n\nLeuven is a 25-minute train ride from Brussels, and students report living costs of roughly EUR 900–1,100 per month including housing. The first selection round will be folded into the 116 exchange call, opening January 2027.",
+      categoryId: "pcat-partnership",
+      type: "news",
+      status: "published",
+      publishedAt: new Date("2026-06-28"),
+      seoTitle: "Tunghai signs exchange agreement with KU Leuven",
+      seoDescription: "A new exchange agreement with KU Leuven opens 4 tuition-waived spots per year from academic year 116.",
+      externalUrl: null,
+      authorId,
+    },
+    {
+      id: "post-04",
+      slug: "summer-office-hours",
+      titleZh: "暑假期間服務時間與文件領取方式",
+      titleEn: "Summer Office Hours & Document Pick-up",
+      bodyZh: "暑假期間（7月1日至8月31日），國際處櫃檯服務時間為週一至週五09:00–16:00，中午12:00–13:00休息。\n\n需辦理在學證明、推薦信或成績單驗證的同學，請至少於領件前一個工作天提出申請。\n\n僅簽證面試可受理當日急件，請攜帶面試預約證明。",
+      bodyEn: "During the summer break (1 July – 31 August), the OIR front desk is open Monday to Friday, 09:00–16:00, closed 12:00–13:00 for lunch.\n\nStudents needing enrolment certificates, nomination letters, or transcript verification should submit the request at least one working day before pick-up.\n\nSame-day requests are only accepted for visa interview appointments — bring proof of your appointment time.",
+      categoryId: "pcat-office",
+      type: "notice",
+      status: "published",
+      publishedAt: new Date("2026-06-25"),
+      seoTitle: "OIR summer office hours",
+      seoDescription: "OIR front desk hours during July and August, and how to request documents for pick-up.",
+      externalUrl: null,
+      authorId,
+    },
+    {
+      id: "post-05",
+      slug: "credit-transfer-guide",
+      titleZh: "交換返國學分抵免完整指南",
+      titleEn: "Credit Transfer Guide for Returning Exchange Students",
+      bodyZh: "學分抵免是交換結束後最常被詢問的流程。本指南說明從行前選課到返國送件的每個步驟。\n\n出國前務必完成「學習計畫書」（Learning Agreement），並取得系主任簽章。未事先核可的課程返國後可能無法抵免。\n\n返國後兩週內，請將姊妹校正式成績單正本、課程大綱及抵免申請表送交系辦公室初審，再轉送教務處。\n\n每學期抵免上限為25學分，通識課程最多抵免6學分。詳細規定請參閱附件。",
+      bodyEn: "Credit transfer is the most-asked question after an exchange. This guide walks through every step, from picking courses before departure to filing documents after you return.\n\nBefore leaving, complete the Learning Agreement and have it signed by your department chair. Courses not approved in advance may not transfer.\n\nWithin two weeks of returning, submit the original transcript from the host university, course syllabi, and the credit transfer form to your department office for first review, then to the Office of Academic Affairs.\n\nThe cap is 25 credits per semester, with a maximum of 6 general-education credits. Full rules are in the attachment.",
+      categoryId: "pcat-exchange",
+      type: "guide",
+      status: "published",
+      publishedAt: new Date("2026-06-30"),
+      seoTitle: "Credit transfer guide for exchange students",
+      seoDescription: "How to get exchange courses recognised: Learning Agreement, transcript submission, and the 25-credit cap.",
+      externalUrl: null,
+      authorId,
+    },
+    {
+      id: "post-06",
+      slug: "115-study-abroad-award-results",
+      titleZh: "115學年度留學獎勵金錄取名單公告",
+      titleEn: "115 Study Abroad Encouragement Award — Results",
+      bodyZh: "評選委員會已完成115學年度留學獎勵金審查，共28位同學獲獎，每人核發新臺幣50,000元，用於支應交換相關支出。\n\n錄取名單（學號部分遮蔽）如附件。獲獎通知書自6月5日起可持學生證至國際處櫃檯領取。\n\n獎助金將於6月底前匯入同學登記之帳戶。",
+      bodyEn: "The selection committee has awarded the 115 Study Abroad Encouragement Award to 28 students. Each awardee receives NT$50,000 towards exchange-related expenses.\n\nThe awardee list (student IDs partially masked) is attached. Award letters can be collected at the OIR front desk with your student ID card from 5 June.\n\nThe stipend will be transferred to your registered bank account by the end of June.",
+      categoryId: "pcat-funding",
+      type: "news",
+      status: "published",
+      publishedAt: new Date("2026-06-02"),
+      seoTitle: "115 Study Abroad Encouragement Award results",
+      seoDescription: "28 students received the 115 Study Abroad Encouragement Award of NT$50,000 each.",
+      externalUrl: null,
+      authorId,
+    },
+    {
+      id: "post-07",
+      slug: "about-oir",
+      titleZh: "關於國際處",
+      titleEn: "About the Office of International Relations",
+      bodyZh: "國際處負責推動本校國際化，業務涵蓋姊妹校締約、學生交換、國際學生招生、留學獎助金及國際活動辦理。\n\n本處位於國際大樓3樓，設有國際交流組與境外生輔導組。",
+      bodyEn: "The Office of International Relations advances the university's internationalisation: partner agreements, student exchange, international admissions, study-abroad funding, and international events.\n\nThe office is on the 3rd floor of the International Building and comprises the Exchange Section and the International Student Services Section.",
+      categoryId: "pcat-office",
+      type: "page",
+      status: "published",
+      publishedAt: new Date("2026-01-15"),
+      seoTitle: "About the Office of International Relations",
+      seoDescription: "What the Tunghai Office of International Relations does and where to find us.",
+      externalUrl: null,
+      authorId,
+    },
+    {
+      id: "post-08",
+      slug: "116-1-exchange-call-preview",
+      titleZh: "116學年度第1學期交換甄選預告",
+      titleEn: "116-1 Exchange Call — Preview",
+      bodyZh: "116學年度第1學期交換甄選預計於2026年11月開放，本篇為草稿，內容尚未定案。",
+      bodyEn: "The 116-1 exchange selection round is expected to open in November 2026. This is a draft and the details are not final.",
+      categoryId: "pcat-exchange",
+      type: "notice",
+      status: "draft",
+      publishedAt: null,
+      seoTitle: "",
+      seoDescription: "",
+      externalUrl: null,
+      authorId,
+    },
+  ];
+}
+
+const POST_TAG_ROWS: (typeof postTags.$inferInsert)[] = [
+  { postId: "post-01", tagId: "tag-01" },
+  { postId: "post-01", tagId: "tag-02" },
+  { postId: "post-02", tagId: "tag-01" },
+  { postId: "post-02", tagId: "tag-05" },
+  { postId: "post-03", tagId: "tag-04" },
+  { postId: "post-03", tagId: "tag-06" },
+  { postId: "post-04", tagId: "tag-08" },
+  { postId: "post-05", tagId: "tag-04" },
+  { postId: "post-06", tagId: "tag-05" },
+  { postId: "post-06", tagId: "tag-07" },
+  { postId: "post-08", tagId: "tag-01" },
+];
+
+// ---------- Step 5: Testimonials and site stats ----------
+
+const TESTIMONIAL_ROWS: (typeof testimonials.$inferInsert)[] = [
+  {
+    id: "tst-01",
+    partnerSchoolId: "sch-01",
+    displayName: "L 同學",
+    deptYear: "資工系四年級",
+    country: "Japan",
+    termLabel: "114-1",
+    highlights: ["研究室文化比想像中開放，教授鼓勵提問","宿舍每月約 32,000 日圓，含水電","JLPT N2 夠用，但專題討論還是吃力"],
+    bodyZh: "我在114學年度第1學期到京都大學交換，主修資訊工程。最大的收穫不是課程本身，而是研究室的討論文化。\n\n生活方面，京大提供的國際學生宿舍每月約32,000日圓，走路到吉田校區15分鐘。物價比台中高，但學餐一餐約500日圓仍可負擔。\n\n給學弟妹的建議：JLPT N2只是門檻，實際上專題討論的語速非常快。出發前多聽學術演講的錄音會很有幫助。",
+    bodyEn: "I spent 114-1 at Kyoto University studying computer science. The biggest gain was not the coursework but the discussion culture in the lab.\n\nThe international dorm costs about JPY 32,000 a month and is a 15-minute walk to the Yoshida campus. Prices are higher than Taichung, but the canteen at around JPY 500 a meal is manageable.\n\nAdvice: JLPT N2 is only the threshold. Seminar discussions move fast — listening to recorded academic talks before you go helps a lot.",
+    // fullTextFileId stays null: it points at media_files, and no
+    // object exists in MinIO for a seeded row to reference.
+    fullTextFileId: null,
+    consentGiven: true,
+    status: "published",
+  },
+  {
+    id: "tst-02",
+    partnerSchoolId: "sch-02",
+    displayName: "Chang Wei-Chen",
+    deptYear: "Industrial Engineering, Year 3",
+    country: "Germany",
+    termLabel: "114-2",
+    highlights: ["Course registration is self-service and closes fast","Find housing before you fly — Munich is tight","Semester ticket covers all public transport"],
+    bodyZh: "慕尼黑工大的選課完全自助，熱門課程開放後兩天就額滿，務必提前研究課表。\n\n住宿是最大挑戰。學校不保證宿舍，我在出發前三個月就開始在 Studentenwerk 排隊，仍等到開學前兩週才拿到房間。\n\n學期票（Semesterticket）已包含在註冊費中，慕尼黑全區大眾運輸都能搭，非常划算。",
+    bodyEn: "Course registration at TUM is entirely self-service, and popular courses fill within two days of opening — study the catalogue in advance.\n\nHousing was the hardest part. TUM does not guarantee a room; I joined the Studentenwerk queue three months before departure and still only got a place two weeks before the semester started.\n\nThe Semesterticket is bundled into the registration fee and covers all public transport in Munich, which is excellent value.",
+    // fullTextFileId stays null: it points at media_files, and no
+    // object exists in MinIO for a seeded row to reference.
+    fullTextFileId: null,
+    consentGiven: true,
+    status: "published",
+  },
+  {
+    id: "tst-03",
+    partnerSchoolId: "sch-03",
+    displayName: "W 同學",
+    deptYear: "國際經營與貿易學系三年級",
+    country: "Australia",
+    termLabel: "114-2",
+    highlights: ["宿舍申請要趕優先截止日","打工每週上限 24 小時，時薪約 26 澳幣","小組報告佔分很重，別低估"],
+    bodyZh: "墨爾本大學對交換生的宿舍申請有優先截止日，錯過就只能自己找房。我在10月31日前送出，順利分配到自炊式公寓，每週約400澳幣。\n\n課程評分方式與台灣差異很大，小組報告與課堂參與常佔一半以上，期末考反而比重不高。\n\n生活費含住宿每月約1,800澳幣，學生簽證允許每兩週工作48小時，可以補貼一部分。",
+    bodyEn: "Melbourne has a priority deadline for exchange student housing — miss it and you are on your own. I applied before 31 October and got a self-catered apartment at about AUD 400 a week.\n\nAssessment differs a lot from Taiwan: group projects and participation often make up more than half the grade, while finals count for less.\n\nLiving costs including housing run about AUD 1,800 a month. The student visa allows 48 hours of work per fortnight, which covers part of it.",
+    // fullTextFileId stays null: it points at media_files, and no
+    // object exists in MinIO for a seeded row to reference.
+    fullTextFileId: null,
+    consentGiven: true,
+    status: "published",
+  },
+  {
+    id: "tst-04",
+    partnerSchoolId: "sch-05",
+    displayName: "K 同學",
+    deptYear: "化學工程學系四年級",
+    country: "Singapore",
+    termLabel: "114-1",
+    highlights: ["課程節奏快，一週兩次小考是常態","宿舍在校內，通勤時間為零","英語授課但同學語速很快"],
+    bodyZh: "新加坡國立大學的課業壓力比預期高，多數課程每兩週就有一次評量，期中期末只是其中兩次。\n\n宿舍在校內，走路十分鐘到系館，省下的通勤時間全部拿來念書。\n\n雖然全英語授課，但同學多為雙語背景，討論時語速很快，前一個月需要適應。",
+    bodyEn: "NUS is more demanding than I expected — most courses assess you every two weeks, with the midterm and final being just two of those.\n\nThe dorm is on campus, a ten-minute walk from the department, and the time saved on commuting went straight into study.\n\nTeaching is in English, but most classmates are bilingual and discussions move quickly. The first month takes adjusting.",
+    // fullTextFileId stays null: it points at media_files, and no
+    // object exists in MinIO for a seeded row to reference.
+    fullTextFileId: null,
+    consentGiven: true,
+    status: "published",
+  },
+  {
+    id: "tst-05",
+    partnerSchoolId: "sch-07",
+    displayName: "H 同學",
+    deptYear: "企業管理學系三年級",
+    country: "Japan",
+    termLabel: "115-1",
+    highlights: ["早大的社團文化值得參加","東京生活費比京都高約 30%","雙聯課程銜接順利"],
+    bodyZh: "這份心得尚未取得同意公開，僅供國際處內部參考。",
+    bodyEn: "This testimonial has not yet been cleared for publication and is for internal OIR reference only.",
+    // fullTextFileId stays null: it points at media_files, and no
+    // object exists in MinIO for a seeded row to reference.
+    fullTextFileId: null,
+    consentGiven: false,
+    status: "draft",
+  },
+];
+
+function buildSiteStatRows(updatedById: string): (typeof siteStats.$inferInsert)[] {
+  return [
+    {
+      id: "stt-01",
+      academicYear: "115",
+      metricKey: "outbound_count",
+      labelZh: "本學年出國交換人數",
+      labelEn: "Students abroad this year",
+      value: 148,
+      unitZh: "人",
+      unitEn: "students",
+      updatedById,
+    },
+    {
+      id: "stt-02",
+      academicYear: "115",
+      metricKey: "partner_school_count",
+      labelZh: "姊妹校總數",
+      labelEn: "Partner universities",
+      value: 42,
+      unitZh: "校",
+      unitEn: "schools",
+      updatedById,
+    },
+    {
+      id: "stt-03",
+      academicYear: "115",
+      metricKey: "country_count",
+      labelZh: "涵蓋國家與地區",
+      labelEn: "Countries & regions",
+      value: 18,
+      unitZh: "國",
+      unitEn: "countries",
+      updatedById,
+    },
+    {
+      id: "stt-04",
+      academicYear: "115",
+      metricKey: "funding_total",
+      labelZh: "本學年核發獎助金",
+      labelEn: "Funding awarded this year",
+      value: 4260000,
+      unitZh: "新臺幣",
+      unitEn: "TWD",
+      updatedById,
+    },
+    {
+      id: "stt-05",
+      academicYear: "114",
+      metricKey: "outbound_count",
+      labelZh: "上學年出國交換人數",
+      labelEn: "Students abroad last year",
+      value: 131,
+      unitZh: "人",
+      unitEn: "students",
+      updatedById,
+    },
+  ];
+}
+
+
 async function seedMobility(force: boolean, adminUserId: string) {
   const existingCount = await db.$count(programs);
 
@@ -921,7 +1254,7 @@ async function seedMobility(force: boolean, adminUserId: string) {
   console.log(`  ${BULLETIN_ROWS.length} bulletins`);
   console.log(`  ${FUNDING_ROWS.length} fundings`);
   console.log("  5 T-Corner slots (hosted by the seeded admin — placeholder)");
-  console.log("\n  Not seeded: testimonials, site_stats, faqs.\n");
+  console.log("");
 }
 
 async function seedKnowledge(force: boolean, adminUserId: string) {
@@ -956,6 +1289,118 @@ async function seedKnowledge(force: boolean, adminUserId: string) {
   console.log(`  ${buildFaqRows(adminUserId).length} FAQs (reviewed by the seeded admin — placeholder)\n`);
 }
 
+async function seedNewsroom(force: boolean, adminUserId: string) {
+  const existingCount = await db.$count(posts);
+
+  if (existingCount > 0 && !force) {
+    console.log(
+      `✓ posts already has ${existingCount} row(s) — leaving newsroom data alone.`
+    );
+    console.log("  Pass --force to wipe and re-insert it.\n");
+    return;
+  }
+
+  const postRows = buildPostRows(adminUserId);
+
+  await db.transaction(async (tx) => {
+    if (force) {
+      // post_tags cascades from posts, but deleting it explicitly keeps the
+      // order readable. posts.categoryId is onDelete: "restrict", so the
+      // categories this step owns can only go once their posts are gone.
+      await tx.delete(postTags);
+      await tx.delete(posts);
+      await tx.delete(tags);
+      for (const row of POST_CATEGORY_ROWS) {
+        await tx.delete(categories).where(eq(categories.id, row.id));
+      }
+    }
+
+    await tx.insert(categories).values(POST_CATEGORY_ROWS);
+    await tx.insert(tags).values(TAG_ROWS);
+    await tx.insert(posts).values(postRows);
+    await tx.insert(postTags).values(POST_TAG_ROWS);
+  });
+
+  const published = postRows.filter((row) => row.status === "published").length;
+
+  console.log("✓ Seeded newsroom data.");
+  console.log(`  ${POST_CATEGORY_ROWS.length} post categories`);
+  console.log(`  ${TAG_ROWS.length} tags`);
+  console.log(
+    `  ${postRows.length} posts (${published} published, ${postRows.length - published} draft) — authored by the seeded admin`
+  );
+  console.log(`  ${POST_TAG_ROWS.length} post–tag links\n`);
+}
+
+async function seedShowcase(force: boolean, adminUserId: string) {
+  const existingCount = await db.$count(testimonials);
+
+  if (existingCount > 0 && !force) {
+    console.log(
+      `✓ testimonials already has ${existingCount} row(s) — leaving showcase data alone.`
+    );
+    console.log("  Pass --force to wipe and re-insert it.\n");
+    return;
+  }
+
+  const statRows = buildSiteStatRows(adminUserId);
+
+  /*
+   * Every testimonial names the school it came from, and that column is a
+   * required foreign key. This step guards on `testimonials` being empty, not
+   * on the mobility step having run — so on a database that already had its own
+   * programs, step 2 is skipped, sch-01…sch-10 never exist, and inserting the
+   * whole fixture blows up on the constraint.
+   *
+   * So: insert the ones whose school is actually present, and say plainly which
+   * were left out. Site stats have no such dependency and always go in.
+   */
+  const presentSchools = new Set(
+    (await db.select({ id: partnerSchools.id }).from(partnerSchools)).map(
+      (row) => row.id
+    )
+  );
+  const testimonialRows = TESTIMONIAL_ROWS.filter((row) =>
+    presentSchools.has(row.partnerSchoolId)
+  );
+  const skipped = TESTIMONIAL_ROWS.length - testimonialRows.length;
+
+  await db.transaction(async (tx) => {
+    if (force) {
+      await tx.delete(testimonials);
+      await tx.delete(siteStats);
+    }
+
+    if (testimonialRows.length > 0) {
+      await tx.insert(testimonials).values(testimonialRows);
+    }
+    await tx.insert(siteStats).values(statRows);
+  });
+
+  // One fixture row is deliberately an unconsented draft, so /admin/testimonials
+  // has a row in that state to work with — hence counting rather than asserting.
+  const live = testimonialRows.filter(
+    (row) => row.status === "published" && row.consentGiven
+  ).length;
+
+  console.log("✓ Seeded testimonials and site stats.");
+  console.log(
+    `  ${testimonialRows.length} testimonials (${live} published, ${testimonialRows.length - live} awaiting consent)`
+  );
+  if (skipped > 0) {
+    console.log(
+      `  ${skipped} skipped — they reference seeded partner schools (sch-01…sch-10)`
+    );
+    console.log(
+      "    that this database does not have. Run with --force to seed the"
+    );
+    console.log("    mobility fixture too, then re-run to pick them up.");
+  }
+  console.log(
+    `  ${statRows.length} site stats — credited to the seeded admin as a placeholder\n`
+  );
+}
+
 // ---------- Run ----------
 
 async function main() {
@@ -970,6 +1415,8 @@ async function main() {
 
   await seedMobility(args.force, adminUserId);
   await seedKnowledge(args.force, adminUserId);
+  await seedNewsroom(args.force, adminUserId);
+  await seedShowcase(args.force, adminUserId);
 }
 
 /** A `docker run` line whose credentials match whatever DATABASE_URL says. */

@@ -13,7 +13,9 @@ export default async function SiteLayout({
   const staff = session && isStaffRole(role) ? { name: session.user.name } : null;
 
   return (
-    <div className="flex min-h-screen flex-col">
+    // `site-theme` swaps the shadcn tokens for the OIR palette (see
+    // app/globals.css). It is scoped here so /admin keeps the console theme.
+    <div className="site-theme flex min-h-screen flex-col bg-background text-foreground">
       <SiteHeader staff={staff} />
       <main className="flex-1">{children}</main>
       <SiteFooter staff={staff} />

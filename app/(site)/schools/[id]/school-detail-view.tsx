@@ -101,7 +101,7 @@ export function SchoolDetailView({
             </Badge>
           )}
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">{t(school.name)}</h1>
+        <h1 className="text-3xl tracking-tight">{t(school.name)}</h1>
         <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
           <span className="flex items-center gap-1">
             <MapPin className="size-4" />
@@ -228,7 +228,7 @@ export function SchoolDetailView({
       {/* Open calls covering this school */}
       {openCalls.length > 0 && (
         <section className="mb-10">
-          <h2 className="mb-4 text-xl font-bold tracking-tight">
+          <h2 className="mb-4 text-xl tracking-tight">
             Apply through
           </h2>
           <div className="space-y-3">
@@ -258,7 +258,7 @@ export function SchoolDetailView({
 
       {/* Testimonials from students who went here */}
       <section>
-        <h2 className="mb-4 flex items-center gap-2 text-xl font-bold tracking-tight">
+        <h2 className="mb-4 flex items-center gap-2 text-xl tracking-tight">
           <Quote className="size-5 text-primary" />
           What students said
         </h2>

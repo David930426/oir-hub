@@ -16,7 +16,7 @@ export default function LoginPage() {
             height={74}
             className="mx-auto mb-4 h-14 w-auto"
           />
-          <h1 className="text-2xl font-bold tracking-tight">Staff login</h1>
+          <h1 className="text-2xl tracking-tight">Staff login</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Sign in to the OIR admin console.
           </p>

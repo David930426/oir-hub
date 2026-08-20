@@ -102,8 +102,10 @@ just not for forms.
   downloads go through `GET /api/media/[id]`, which checks the session and
   redirects to a short-lived presigned URL. Write the bytes before the row and
   clean the object up if the insert fails.
-- **`lib/mock/`** is design-stage data. Screens still reading from it are not yet
-  wired to the database; move them onto a repository when their turn comes.
+- **`lib/mock/`** no longer holds any mock data — every screen reads through a
+  repository now. What is left is the vocabulary those screens share:
+  `labels.ts` (the label/tone maps) and `types.ts` (the `Localized` row shapes).
+  The folder keeps its name only because ~40 files import from it.
 
 ## Commands
 

@@ -2,14 +2,15 @@ import { relations } from "drizzle-orm";
 import {
   boolean,
   index,
-  integer,
+  // integer,
   pgEnum,
   pgTable,
   text,
   timestamp,
-  uniqueIndex,
+  // uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { FAQ_AUDIENCES, KB_SOURCE_TABLES, KB_STATUSES } from "@/constant";
+import { FAQ_AUDIENCES } from "@/constant";
+// import { KB_SOURCE_TABLES, KB_STATUSES } from "@/constant";
 import { user } from "./auth.schema";
 import { categories, mediaFiles } from "./cms.schema";
 
@@ -21,13 +22,25 @@ import { categories, mediaFiles } from "./cms.schema";
  * Nothing in kb_documents is written by hand: each row is flattened from a FAQ,
  * post, bulletin, testimonial, or file, then split into chunks and embedded
  * into Qdrant. To correct an answer, edit the source row and re-index.
+ *
+ * ---------------------------------------------------------------------------
+ * COMMENTED OUT — nothing in the app reads or writes these tables.
+ *
+ *   kb_documents, kb_chunks
+ *     The derived RAG index. There is no indexing job, no embedding model and
+ *     no Qdrant client in this codebase, so every row would have to be written
+ *     by hand — which defeats the point of a derived index.
+ *
+ * STILL LIVE in this file: faqs and faq_sources — staff author them in
+ * /admin/faqs and the public /faqs page renders them.
+ * ---------------------------------------------------------------------------
  */
 
 export const faqAudience = pgEnum("faq_audience", FAQ_AUDIENCES);
 
-export const kbSourceTable = pgEnum("kb_source_table", KB_SOURCE_TABLES);
-
-export const kbStatus = pgEnum("kb_status", KB_STATUSES);
+// export const kbSourceTable = pgEnum("kb_source_table", KB_SOURCE_TABLES);
+//
+// export const kbStatus = pgEnum("kb_status", KB_STATUSES);
 
 /** A staff-written question and answer. */
 export const faqs = pgTable(
@@ -90,67 +103,67 @@ export const faqSources = pgTable(
   ]
 );
 
-/**
- * One indexable document, flattened from a content row.
- *
- * `sourceTable` + `sourceId` is a polymorphic pointer, so it carries no foreign
- * key — the target lives in a different table depending on `sourceTable`.
- * Deleting a source row therefore leaves its document behind; the re-index job
- * is what prunes it.
- */
-export const kbDocuments = pgTable(
-  "kb_documents",
-  {
-    id: text("id")
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    sourceTable: kbSourceTable("source_table").notNull(),
-    sourceId: text("source_id").notNull(), // row id in that table
-    title: text("title").notNull(),
-    content: text("content").notNull(), // flattened plain text
-    language: text("language").notNull().default("zh-TW"),
-    academicYear: text("academic_year"), // freshness filter at retrieval time
-    version: integer("version").notNull().default(1),
-    status: kbStatus("status").notNull().default("pending"),
-    errorMessage: text("error_message"), // set when status = "failed"
-    indexedAt: timestamp("indexed_at", { withTimezone: true }),
-  },
-  (table) => [
-    // One document per source row.
-    uniqueIndex("kb_documents_source_table_source_id_idx").on(
-      table.sourceTable,
-      table.sourceId
-    ),
-    index("kb_documents_status_idx").on(table.status),
-    index("kb_documents_academic_year_idx").on(table.academicYear),
-  ]
-);
-
-/** An embedded slice of a document. The id doubles as the Qdrant point ID. */
-export const kbChunks = pgTable(
-  "kb_chunks",
-  {
-    id: text("id")
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    kbDocumentId: text("kb_document_id")
-      .notNull()
-      .references(() => kbDocuments.id, { onDelete: "cascade" }),
-    index: integer("index").notNull(), // order within the document
-    content: text("content").notNull(),
-    tokenCount: integer("token_count").notNull().default(0),
-    embeddingModel: text("embedding_model").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (table) => [
-    uniqueIndex("kb_chunks_kb_document_id_index_idx").on(
-      table.kbDocumentId,
-      table.index
-    ),
-  ]
-);
+// /**
+ // * One indexable document, flattened from a content row.
+ // *
+ // * `sourceTable` + `sourceId` is a polymorphic pointer, so it carries no foreign
+ // * key — the target lives in a different table depending on `sourceTable`.
+ // * Deleting a source row therefore leaves its document behind; the re-index job
+ // * is what prunes it.
+ // */
+// export const kbDocuments = pgTable(
+  // "kb_documents",
+  // {
+    // id: text("id")
+      // .primaryKey()
+      // .$defaultFn(() => crypto.randomUUID()),
+    // sourceTable: kbSourceTable("source_table").notNull(),
+    // sourceId: text("source_id").notNull(), // row id in that table
+    // title: text("title").notNull(),
+    // content: text("content").notNull(), // flattened plain text
+    // language: text("language").notNull().default("zh-TW"),
+    // academicYear: text("academic_year"), // freshness filter at retrieval time
+    // version: integer("version").notNull().default(1),
+    // status: kbStatus("status").notNull().default("pending"),
+    // errorMessage: text("error_message"), // set when status = "failed"
+    // indexedAt: timestamp("indexed_at", { withTimezone: true }),
+  // },
+  // (table) => [
+    // // One document per source row.
+    // uniqueIndex("kb_documents_source_table_source_id_idx").on(
+      // table.sourceTable,
+      // table.sourceId
+    // ),
+    // index("kb_documents_status_idx").on(table.status),
+    // index("kb_documents_academic_year_idx").on(table.academicYear),
+  // ]
+// );
+//
+// /** An embedded slice of a document. The id doubles as the Qdrant point ID. */
+// export const kbChunks = pgTable(
+  // "kb_chunks",
+  // {
+    // id: text("id")
+      // .primaryKey()
+      // .$defaultFn(() => crypto.randomUUID()),
+    // kbDocumentId: text("kb_document_id")
+      // .notNull()
+      // .references(() => kbDocuments.id, { onDelete: "cascade" }),
+    // index: integer("index").notNull(), // order within the document
+    // content: text("content").notNull(),
+    // tokenCount: integer("token_count").notNull().default(0),
+    // embeddingModel: text("embedding_model").notNull(),
+    // createdAt: timestamp("created_at", { withTimezone: true })
+      // .notNull()
+      // .defaultNow(),
+  // },
+  // (table) => [
+    // uniqueIndex("kb_chunks_kb_document_id_index_idx").on(
+      // table.kbDocumentId,
+      // table.index
+    // ),
+  // ]
+// );
 
 // ---------- Relations ----------
 
@@ -177,13 +190,13 @@ export const faqSourcesRelations = relations(faqSources, ({ one }) => ({
   }),
 }));
 
-export const kbDocumentsRelations = relations(kbDocuments, ({ many }) => ({
-  chunks: many(kbChunks),
-}));
-
-export const kbChunksRelations = relations(kbChunks, ({ one }) => ({
-  document: one(kbDocuments, {
-    fields: [kbChunks.kbDocumentId],
-    references: [kbDocuments.id],
-  }),
-}));
+// export const kbDocumentsRelations = relations(kbDocuments, ({ many }) => ({
+  // chunks: many(kbChunks),
+// }));
+//
+// export const kbChunksRelations = relations(kbChunks, ({ one }) => ({
+  // document: one(kbDocuments, {
+    // fields: [kbChunks.kbDocumentId],
+    // references: [kbDocuments.id],
+  // }),
+// }));

@@ -35,15 +35,6 @@ export function ProgramsView({ programs }: { programs: SiteProgram[] }) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Programs</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Every way to study or work abroad through Tunghai. Each program has its
-          own selection bulletins, partner schools, and eligible funding — start
-          here, then follow the links into the details.
-        </p>
-      </div>
-
       <div className="space-y-4">
         {programs.map((program) => (
           <Card key={program.id} className="overflow-hidden">

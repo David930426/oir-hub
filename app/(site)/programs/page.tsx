@@ -1,3 +1,4 @@
+import { PageBanner } from "@/components/site/page-banner";
 import { listProgramsForSite } from "@/lib/repositories/program.repository";
 import { ProgramsView, type SiteProgram } from "./programs-view";
 
@@ -17,5 +18,14 @@ export default async function ProgramsPage() {
     fundingCount: record.fundingCount,
   }));
 
-  return <ProgramsView programs={programs} />;
+  return (
+    <>
+      <PageBanner eyebrow="Ways to go abroad" title="Programs">
+        Every way to study or work abroad through Tunghai. Each program has its
+        own selection bulletins, partner schools, and eligible funding — start
+        here, then follow the links into the details.
+      </PageBanner>
+      <ProgramsView programs={programs} />
+    </>
+  );
 }
