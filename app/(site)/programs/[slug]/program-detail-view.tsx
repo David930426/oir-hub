@@ -187,7 +187,7 @@ export function ProgramDetailView({
         <div className="mb-3">
           <EnumBadge value={program.type} meta={programTypeMeta} />
         </div>
-        <h1 className="text-3xl tracking-tight">{t(program.name)}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t(program.name)}</h1>
         <div className="mt-4 max-w-3xl space-y-3 leading-relaxed text-muted-foreground">
           {t(program.overview)
             .split(/\n{2,}/)
@@ -199,7 +199,7 @@ export function ProgramDetailView({
 
       {/* 1. Selection Bulletins */}
       <section className="mb-10">
-        <h2 className="mb-4 text-xl tracking-tight">
+        <h2 className="mb-4 text-xl font-bold tracking-tight">
           📑 {t({ en: "Selection bulletins", zh: "簡章與公告" })}
         </h2>
         {calls.length === 0 ? (
@@ -246,7 +246,7 @@ export function ProgramDetailView({
       {/* 2. Partner Schools Table */}
       <section className="mb-10">
         <div className="mb-4 flex items-end justify-between gap-4">
-          <h2 className="text-xl tracking-tight">
+          <h2 className="text-xl font-bold tracking-tight">
             🏫 {t({ en: "Partner schools", zh: "合作姊妹校" })}
           </h2>
           <Button asChild variant="ghost" size="sm">
@@ -327,7 +327,7 @@ export function ProgramDetailView({
       {/* Dynamic Content ONLY for Semester Exchange Program */}
       {program.type === "exchange" && (
         <section className="mb-10 space-y-6">
-          <h2 className="text-xl tracking-tight">
+          <h2 className="text-xl font-bold tracking-tight">
             📌 {t({ en: "Qualification & Application", zh: "申請資格與規範" })}
           </h2>
 
@@ -463,7 +463,7 @@ export function ProgramDetailView({
         <>
           {/* Application Requirements */}
           <section className="mb-10">
-            <h2 className="mb-2 text-xl tracking-tight">
+            <h2 className="mb-2 text-xl font-bold tracking-tight">
               📋 {t({ en: "Application requirements", zh: "申請資格與要求" })}
             </h2>
             <p className="mb-4 text-xs text-muted-foreground max-w-3xl leading-relaxed">
@@ -545,7 +545,7 @@ export function ProgramDetailView({
 
           {/* Application Process */}
           <section className="mb-10">
-            <h2 className="mb-2 text-xl tracking-tight">
+            <h2 className="mb-2 text-xl font-bold tracking-tight">
               🧭 {t({ en: "Application process", zh: "申請流程" })}
             </h2>
             <p className="mb-4 text-xs text-muted-foreground">
@@ -575,7 +575,7 @@ export function ProgramDetailView({
 
           {/* Tuition and Subsidy Information */}
           <section className="mb-10">
-            <h2 className="mb-4 text-xl tracking-tight">
+            <h2 className="mb-4 text-xl font-bold tracking-tight">
               💰 {t({ en: "Tuition and subsidy information", zh: "學費與補助資訊" })}
             </h2>
   
@@ -627,7 +627,7 @@ export function ProgramDetailView({
         <>
           <Separator className="mb-10" />
           <section className="mb-10">
-            <h2 className="mb-4 text-xl tracking-tight">
+            <h2 className="mb-4 text-xl font-bold tracking-tight">
               🪙 {t({ en: "Funding for this program", zh: "相關獎補助金" })}
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">

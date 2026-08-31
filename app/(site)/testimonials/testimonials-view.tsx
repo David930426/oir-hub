@@ -72,6 +72,14 @@ export function TestimonialsView({ all }: { all: SiteTestimonial[] }) {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">Student testimonials</h1>
+        <p className="mt-2 max-w-2xl text-muted-foreground">
+          Reports written by students after they returned, published only with
+          their consent. Names may be shortened at the author&apos;s request.
+        </p>
+      </div>
+
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />

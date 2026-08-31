@@ -81,6 +81,14 @@ export function NewsView({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">News &amp; notices</h1>
+        <p className="mt-2 text-muted-foreground">
+          Everything the office publishes — deadline notices, scholarship results,
+          partnership news, and how-to guides.
+        </p>
+      </div>
+
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Tabs value={type} onValueChange={setType}>
           <TabsList>

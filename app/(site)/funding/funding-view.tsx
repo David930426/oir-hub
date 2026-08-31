@@ -221,6 +221,15 @@ export function FundingView({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">Funding</h1>
+        <p className="mt-2 max-w-2xl text-muted-foreground">
+          Grants and scholarships you can apply for alongside a program. Ministry
+          and university awards can usually be held together — check the notes on
+          each one.
+        </p>
+      </div>
+
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Tabs value={status} onValueChange={setStatus}>
           <TabsList>
@@ -340,7 +349,7 @@ export function FundingView({
 
       <section id="scholarships">
         <div className="mb-8">
-          <h2 className="text-3xl tracking-tight">
+          <h2 className="text-3xl font-bold tracking-tight">
             {t(scholarshipsHeading)}
           </h2>
           <p className="mt-2 max-w-2xl text-muted-foreground">

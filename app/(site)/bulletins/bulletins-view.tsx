@@ -82,6 +82,15 @@ export function BulletinsView({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">Bulletins 簡章</h1>
+        <p className="mt-2 max-w-2xl text-muted-foreground">
+          Every selection call the office has issued, closest deadline first. A
+          bulletin is the binding document — where the two disagree, the PDF
+          wins.
+        </p>
+      </div>
+
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Tabs value={status} onValueChange={setStatus}>
           <TabsList>

@@ -1,4 +1,3 @@
-import { PageBanner } from "@/components/site/page-banner";
 import { listPublishedFaqs } from "@/lib/repositories/faq.repository";
 import { listCategories } from "@/lib/repositories/taxonomy.repository";
 import { formatDay } from "@/lib/utils";
@@ -33,26 +32,20 @@ export default async function FaqsPage() {
   }));
 
   return (
-    <>
-      <PageBanner eyebrow="Answers with sources" title="Frequently asked questions">
-        Written and reviewed by OIR staff. Every answer lists the document it
-        came from, so you can check the original yourself.
-      </PageBanner>
-      <FaqsView
-        faqs={faqs}
-        // Only categories that actually carry a published answer, so the tab bar
-        // does not offer a filter that returns nothing.
-        categories={categories
-          .filter(
-            (category) =>
-              category.kind === "faq" &&
-              faqs.some((faq) => faq.categoryId === category.id),
-          )
-          .map((category) => ({
-            id: category.id,
-            name: { zh: category.nameZh, en: category.nameEn },
-          }))}
-      />
-    </>
+    <FaqsView
+      faqs={faqs}
+      // Only categories that actually carry a published answer, so the tab bar
+      // does not offer a filter that returns nothing.
+      categories={categories
+        .filter(
+          (category) =>
+            category.kind === "faq" &&
+            faqs.some((faq) => faq.categoryId === category.id),
+        )
+        .map((category) => ({
+          id: category.id,
+          name: { zh: category.nameZh, en: category.nameEn },
+        }))}
+    />
   );
 }

@@ -106,6 +106,15 @@ export function SchoolsView({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">Partner schools</h1>
+        <p className="mt-2 max-w-2xl text-muted-foreground">
+          Filter by the GPA you actually have and see only the schools you can
+          realistically be nominated to. Quotas are per term and reset with each
+          bulletin.
+        </p>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
         {/* Filters */}
         <aside className="space-y-5 lg:sticky lg:top-20 lg:self-start">

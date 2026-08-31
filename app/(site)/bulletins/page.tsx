@@ -1,4 +1,3 @@
-import { PageBanner } from "@/components/site/page-banner";
 import { listBulletins } from "@/lib/repositories/bulletin.repository";
 import { listActivePrograms } from "@/lib/repositories/program.repository";
 import { BulletinsView, type SiteBulletin } from "./bulletins-view";
@@ -32,19 +31,12 @@ export default async function BulletinsPage() {
   }));
 
   return (
-    <>
-      <PageBanner eyebrow="Open calls" title="Bulletins 簡章">
-        Every selection call the office has issued, closest deadline first. A
-        bulletin is the binding document — where the two disagree, the PDF
-        wins.
-      </PageBanner>
-      <BulletinsView
-        bulletins={bulletins}
-        programs={programs.map((program) => ({
-          id: program.id,
-          name: { zh: program.nameZh, en: program.nameEn },
-        }))}
-      />
-    </>
+    <BulletinsView
+      bulletins={bulletins}
+      programs={programs.map((program) => ({
+        id: program.id,
+        name: { zh: program.nameZh, en: program.nameEn },
+      }))}
+    />
   );
 }
